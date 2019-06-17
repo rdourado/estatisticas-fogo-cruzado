@@ -1,0 +1,22 @@
+.title {
+	color: var(--color-orange);
+	font: 700 26px var(--font-sans);
+	margin: 60px auto;
+	padding: 0;
+	text-align: center;
+	text-transform: uppercase;
+}
+
+.grid {
+	margin: 0 10px;
+}
+
+@media (min-width: 960px) {
+	.grid {
+		display: flex;
+		flex-wrap: wrap;
+		margin: 0 auto;
+		max-width: 940px;
+		padding: 0 10px;
+	}
+}

@@ -1,0 +1,31 @@
+:root {
+	--font-sans: 'Roboto', 'Helvetica', 'Helvetica Neue', 'Arial', sans-serif;
+
+	--rgb-orange: 255, 105, 0;
+	--rgb-red: 214, 40, 0;
+	--rgb-metal: 139, 157, 168;
+	--rgb-grey-dark: 35, 42, 46;
+	--rgb-grey: 49 61 68;
+	--rgb-grey-light: 182, 182, 182;
+	--rgb-grey-lighter: 213, 213, 213;
+	--rgb-ice: 239, 239, 239;
+
+	--color-orange: rgb(var(--rgb-orange));
+	--color-red: rgb(var(--rgb-red));
+	--color-metal: rgb(var(--rgb-metal));
+	--color-grey-dark: rgb(var(--rgb-grey-dark));
+	--color-grey: rgb(var(--rgb-grey));
+	--color-grey-light: rgb(var(--rgb-grey-light));
+	--color-grey-lighter: rgb(var(--rgb-grey-lighter));
+	--color-ice: rgb(var(--rgb-ice));
+}
+
+.app label,
+.app button,
+.app summary {
+	cursor: pointer;
+}
+
+.app summary::-webkit-details-marker {
+	display: none;
+}

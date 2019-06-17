@@ -1,0 +1,33 @@
+.main {
+	align-items: center;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	padding: 0 0 120px;
+	text-align: center;
+}
+
+.main img {
+	display: block;
+	height: auto;
+	margin: 0 auto;
+	max-width: 100%;
+	object-fit: cover;
+}
+
+.title {
+	color: var(--color-red);
+	display: block;
+	font: 20px var(--font-sans);
+	margin: 0 0 0.5em;
+	padding: 0;
+	text-transform: uppercase;
+}
+
+.lead {
+	color: var(--color-grey-dark);
+	display: block;
+	font: 20px var(--font-sans);
+	margin: 0;
+	padding: 0;
+}
