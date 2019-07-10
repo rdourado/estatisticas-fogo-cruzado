@@ -246,27 +246,35 @@ class Mapa_Fogo_Cruzado_Admin {
 					continue 1;
 				}
 
-				list( $id, $street, $date, $lat, $lng, $had_police, $police_dead, $police_injured,
-				$total_dead, $total_injured, $was_slaughter, $nbrhd, $city, $region, $upp ) = $row;
+				list(
+					$id,
+					$street,
+					$day,
+					$month,
+					$year,
+					$lat,
+					$lng,
+					$had_police,
+					$police_dead,
+					$police_injured,
+					$total_dead,
+					$total_injured,
+					$was_slaughter,
+					$nbrhd,
+					$city,
+					$region,
+					$upp
+				) = $row;
 
 				// Empty line?
-				if ( ( empty( $city ) || '1970-01-01 00:00:00' === $city )
-					&& ( empty( $region ) || '1970-01-01 00:00:00' === $region )
-					&& ( empty( $nbrhd ) || '1970-01-01 00:00:00' === $nbrhd )
-				) {
+				if ( ( empty( $city ) || '1970-01-01 00:00:00' === $city ) && ( empty( $region ) || '1970-01-01 00:00:00' === $region ) ) {
 					continue 1;
 				}
 
 				$is_valid = true;
 
 				// Format date
-				$formatted_date = date_create_from_format( 'd/m/Y G:i:s', strval( $date ) );
-				if ( ! $formatted_date ) {
-					$formatted_date = date_create_from_format( 'd/m/Y G:i', strval( $date ) );
-				}
-				if ( ! $formatted_date ) {
-					$formatted_date = date_create_from_format( 'd/m/Y', strval( $date ) );
-				}
+				$formatted_date = date_create_from_format( 'd/m/Y', strval( $day . '/' . $month . '/' . $year ) );
 
 				// Check for errors
 				if ( ! $formatted_date || '1970-01-01 00:00:00' === $formatted_date ) {

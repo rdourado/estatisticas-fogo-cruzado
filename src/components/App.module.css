@@ -1,5 +1,6 @@
 :root {
 	--font-sans: 'Roboto', 'Helvetica', 'Helvetica Neue', 'Arial', sans-serif;
+	--font-sans-condensed: 'Roboto Condensed', 'Helvetica', 'Helvetica Neue', 'Arial', sans-serif;
 
 	--rgb-orange: 255, 105, 0;
 	--rgb-red: 214, 40, 0;

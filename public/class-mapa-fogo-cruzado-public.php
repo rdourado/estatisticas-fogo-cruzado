@@ -75,6 +75,13 @@ class Mapa_Fogo_Cruzado_Public {
 
 		if ( is_page_template( 'mapa-fogo-cruzado-public-display.php' ) ) {
 			wp_register_style(
+				'googlefonts',
+				'//fonts.googleapis.com/css?family=Roboto+Condensed:400,700|Roboto:400,700&display=swap',
+				array(),
+				null,
+				'screen'
+			);
+			wp_register_style(
 				'socicon',
 				'//s3.amazonaws.com/icomoon.io/114779/Socicon/style.css?u8vidh',
 				array(),
@@ -84,7 +91,7 @@ class Mapa_Fogo_Cruzado_Public {
 			wp_enqueue_style(
 				$this->plugin_name,
 				plugin_dir_url( __FILE__ ) . 'css/mapa-fogo-cruzado-public.css',
-				array( 'socicon' ),
+				array( 'googlefonts', 'socicon' ),
 				null
 			);
 		}
