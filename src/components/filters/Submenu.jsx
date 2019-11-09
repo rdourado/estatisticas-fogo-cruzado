@@ -1,83 +1,70 @@
-/**
- * External dependencies
- */
 import React, { useState, cloneElement } from 'react'
 import { arrayOf, bool, element, func, oneOfType, shape, string } from 'prop-types'
-import classnames from 'classnames'
 import castArray from 'lodash/castArray'
-/**
- * Internal dependencies
- */
-import css from './Submenu.module.css'
+import styled, { css } from 'styled-components'
+import {
+	Close,
+	Details as DetailsYears,
+	Item,
+	Link as LinkYears,
+	List as ListYears,
+	Modal,
+} from './Years'
+import { breakpoint, rgbGreyLight, rgbOrange, colorOrange } from '../../shared/styles'
 
-export const Submenu = ({
-	title,
-	current,
-	options,
-	isOpen,
-	hideMenu,
-	showMenu,
-	onSelect,
-	label,
-	className,
-	children,
-}) => {
+export const Submenu = props => {
 	const [isHover, setStatus] = useState(false)
 
-	const createHover = status => () => setStatus(status)
-
-	const createClick = value => () => {
-		hideMenu()
-		setStatus(false)
-		onSelect(value)
+	function createHover(status) {
+		return () => setStatus(status)
 	}
 
-	const mapItem = (item, i) => (
-		<li key={i} className={css.item}>
-			<button
-				className={classnames({
-					[css.link]: true,
-					[css.active]: castArray(current).indexOf(item.value || item) >= 0,
-				})}
-				onClick={createClick(item.value || item)}
-			>
-				{item.label || item || '---'}
-			</button>
-		</li>
-	)
+	function createClick(value) {
+		return () => {
+			props.hideMenu()
+			setStatus(false)
+			props.onSelect(value)
+		}
+	}
+
+	function mapItem(item, i) {
+		return (
+			<Item key={i}>
+				<Link
+					type="button"
+					isactive={castArray(props.current).includes(item.value || item) ? 1 : 0}
+					onClick={createClick(item.value || item)}
+				>
+					{item.label || item || '---'}
+				</Link>
+			</Item>
+		)
+	}
 
 	return (
-		<li
-			className={classnames({
-				[css.mainItem]: true,
-				[css.hover]: isHover,
-				[css.disabled]: !options.length && !children,
-			})}
+		<Main
+			ishover={isHover ? 1 : 0}
+			isdisabled={props.options.length === 0 && !props.children ? 1 : 0}
 			onMouseOver={createHover(true)}
+			onFocus={createHover(true)}
 			onMouseOut={createHover(false)}
+			onBlur={() => {}}
 		>
-			<button className={css.mainLink} onClick={showMenu}>
-				{label || title}
-			</button>
-			<div
-				className={classnames({
-					[css.details]: !isOpen,
-					[css.details_]: isOpen,
-					[className]: className,
-				})}
-			>
-				<div className={css.modal} title={title}>
-					<button className={css.close} onClick={hideMenu}>
-						X
-					</button>
-					{children ? (
-						cloneElement(children, { hideMenu: createHover(false), onSelect })
+			<MainLink onClick={props.showMenu}>{props.label || props.title}</MainLink>
+			<Details isopen={props.isOpen}>
+				<Modal title={props.title}>
+					<Close onClick={props.hideMenu}>X</Close>
+					{props.children ? (
+						cloneElement(props.children, {
+							hideMenu: createHover(false),
+							onSelect: props.onSelect,
+						})
 					) : (
-						<ul className={css.list}>{options.map(mapItem)}</ul>
+						<List>{props.options.map(mapItem)}</List>
 					)}
-				</div>
-			</div>
-		</li>
+				</Modal>
+			</Details>
+		</Main>
 	)
 }
 
@@ -96,5 +83,91 @@ Submenu.propTypes = {
 Submenu.defaultProps = {
 	options: [],
 }
+
+const Main = styled(Item)`
+	${({ isdisabled }) =>
+		isdisabled === 1 &&
+		css`
+			opacity: 0.5;
+			pointer-events: none;
+		`}
+
+	@media (min-width: ${breakpoint}) {
+		color: #fff;
+		position: relative;
+		text-transform: uppercase;
+
+		& + & {
+			border: none;
+		}
+
+		> div {
+			display: ${({ ishover }) => (ishover ? 'block' : 'none')};
+		}
+	}
+`
+
+const Details = styled(DetailsYears)`
+	@media (min-width: ${breakpoint}) {
+		background: transparent;
+		margin: 0;
+	}
+`
+
+const List = styled(ListYears)`
+	@media (min-width: ${breakpoint}) {
+		background: #fff;
+		box-shadow: 6px 6px 0 0 rgba(${rgbGreyLight}, 0.5);
+		max-height: 400px;
+		overflow: auto;
+		padding: 10px;
+		white-space: nowrap;
+	}
+`
+
+const Link = styled(LinkYears)`
+	transition: none;
+
+	@media (min-width: ${breakpoint}) {
+		text-align: left;
+		width: 100%;
+
+		${({ isactive }) =>
+			isactive === 1 &&
+			css`
+				background: rgba(${rgbOrange}, 0.3);
+			`}
+
+		:hover {
+			background: ${colorOrange};
+			color: #fff;
+		}
+	}
+`
+
+const MainLink = styled(LinkYears)`
+	transition: none;
+
+	@media (min-width: ${breakpoint}) {
+		background: inherit;
+		color: inherit;
+		margin: 0 4px 0 0;
+		padding: 23px 20px;
+		text-transform: uppercase;
+
+		text-align: left;
+		width: 100%;
+
+		:hover {
+			background: ${colorOrange};
+			color: #fff;
+		}
+
+		${Main}:hover > & {
+			background: #fff;
+			color: ${colorOrange};
+		}
+	}
+`
 
 export default Submenu

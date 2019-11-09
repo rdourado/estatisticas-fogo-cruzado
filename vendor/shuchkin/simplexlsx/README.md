@@ -1,4 +1,5 @@
 # SimpleXLSX class 0.8.7 (Official)
+[<img src="https://img.shields.io/endpoint.svg?url=https%3A%2F%2Fshieldsio-patreon.herokuapp.com%2Fshuchkin" />](https://www.patreon.com/shuchkin)
 
 Parse and retrieve data from Excel XLSx files. MS Excel 2007 workbooks PHP reader.
 No addiditional extensions need (internal unzip + standart SimpleXML parser)
@@ -143,7 +144,7 @@ if ( $xlsx = SimpleXLSX::parse('http://www.example.com/example.xlsx' ) ) {
 // For instance $data is a data from database or cache    
 if ( $xlsx = SimpleXLSX::parse( $data, true ) ) {
 	print_r( $xlsx->rows() );
- else {
+} else {
 	echo SimpleXLSX::parseError();
 }
 ```
@@ -196,7 +197,7 @@ SimpleXLSX::ParseErrno(), $xlsx->errno()<br/>
 
 ## History
 ```
-v0.8.7 (2019-04-18) empty rows fixed, tag 0.8.7
+v0.8.7 (2019-04-18) empty rows fixed, release 0.8.7
 v0.8.6 (2019-04-16) 1900/1904 bug fixed
 v0.8.5 (2019-03-07) SimpleXLSX::ParseErrno(), $xlsx->errno() returns error code
 v0.8.4 (2019-02-14) detect datetime values, mb_string.func_overload=2 support .!. Bitrix

@@ -76,14 +76,7 @@ class Mapa_Fogo_Cruzado_Public {
 		if ( is_page_template( 'mapa-fogo-cruzado-public-display.php' ) ) {
 			wp_register_style(
 				'googlefonts',
-				'//fonts.googleapis.com/css?family=Roboto+Condensed:400,700|Roboto:400,700&display=swap',
-				array(),
-				null,
-				'screen'
-			);
-			wp_register_style(
-				'socicon',
-				'//s3.amazonaws.com/icomoon.io/114779/Socicon/style.css?u8vidh',
+				'//fonts.googleapis.com/css?family=Roboto+Condensed:300,400,700&display=swap',
 				array(),
 				null,
 				'screen'
@@ -91,7 +84,7 @@ class Mapa_Fogo_Cruzado_Public {
 			wp_enqueue_style(
 				$this->plugin_name,
 				plugin_dir_url( __FILE__ ) . 'css/mapa-fogo-cruzado-public.css',
-				array( 'googlefonts', 'socicon' ),
+				array( 'googlefonts', 'dashicons' ),
 				null
 			);
 		}
@@ -107,31 +100,40 @@ class Mapa_Fogo_Cruzado_Public {
 
 		if ( is_page_template( 'mapa-fogo-cruzado-public-display.php' ) ) {
 			wp_register_script(
-				$this->plugin_name . '-chunk',
-				plugin_dir_url( __FILE__ ) . 'js/mapa-fogo-cruzado-public.chunk.js',
-				array(),
-				$this->version,
-				true
-			);
-			wp_register_script(
 				$this->plugin_name,
 				plugin_dir_url( __FILE__ ) . 'js/mapa-fogo-cruzado-public.js',
-				array( $this->plugin_name . '-chunk' ),
-				$this->version,
+				array(),
+				filemtime( plugin_dir_path( __FILE__ ) . 'js/mapa-fogo-cruzado-public.js' ),
 				true
 			);
-			$key = file_get_contents( plugin_dir_path( __FILE__ ) . '.apikey' );
-			wp_localize_script(
-				$this->plugin_name,
-				'mapa_fogo_cruzado',
-				array(
-					'ajax_url' => str_replace( $this->get_domain(), '', admin_url( 'admin-ajax.php' ) ),
-					'logo'     => plugin_dir_url( __FILE__ ) . 'img/logo-fogo-cruzado.png',
-					'loading'  => plugin_dir_url( __FILE__ ) . 'img/loading.gif',
-					'pin'      => plugin_dir_url( __FILE__ ) . 'img/pin.png',
-					'key'      => $key,
-				)
+			wp_enqueue_script(
+				'facebook-sdk',
+				'https://connect.facebook.net/pt_BR/sdk.js',
+				array( $this->plugin_name ),
+				null,
+				true
 			);
+
+			$key      = 'AIzaSyBFnAjbTD9IxbylXToLOa2WI11RbzjFqLM';
+			$localize = array(
+				'key'       => $key,
+				'ajax_url'  => str_replace( $this->get_domain(), '', admin_url( 'admin-ajax.php' ) ),
+				'logo'      => plugin_dir_url( __FILE__ ) . 'img/logo-fogo-cruzado.png',
+				'loading'   => plugin_dir_url( __FILE__ ) . 'img/loading.gif',
+				'pin'       => plugin_dir_url( __FILE__ ) . 'img/pin.png',
+				'permalink' => get_permalink(),
+			);
+
+			if ( isset( $_GET['hash'] ) && ! empty( $_GET['hash'] ) ) {
+				list($filters_hash) = explode( '_', $_GET['hash'] );
+				$transient          = 'mapa_fogo_cruzado-' . $filters_hash;
+				$filters            = (array) get_transient( $transient );
+				if ( false !== reset( $filters ) ) {
+					$localize = array_merge( $localize, $filters );
+				}
+			}
+
+			wp_localize_script( $this->plugin_name, 'mapa_fogo_cruzado', $localize );
 			wp_enqueue_script( $this->plugin_name );
 		}
 
@@ -149,12 +151,12 @@ class Mapa_Fogo_Cruzado_Public {
 			wp_send_json_error( 'Missing UF', 400 );
 		}
 		$uf        = strtolower( trim( $uf ) );
-		$transient = 'mapa_fogo_cruzado_' . md5( json_encode( $uf ) );
+		$transient = 'mapa_fogo_cruzado-' . md5( wp_json_encode( $uf ) );
 		$data      = get_transient( $transient );
 
 		if ( false === $data ) {
 			// phpcs:disable
-			$ufs    = $wpdb->get_col(
+			$ufs = $wpdb->get_col(
 				"
 				SELECT DISTINCT LOWER(`uf`) `uf`
 				FROM `{$wpdb->prefix}mapa_fogo_cruzado`
@@ -162,15 +164,16 @@ class Mapa_Fogo_Cruzado_Public {
 				ORDER BY `uf` DESC
 				"
 			);
-			$years  = $wpdb->get_col(
+			$years = $wpdb->get_results(
 				"
-				SELECT DISTINCT DATE_FORMAT( `date`, '%Y' ) `year`
+				SELECT YEAR(`date`) `year`, MIN(`date`) `first`, MAX(`date`) `last`
 				FROM `{$wpdb->prefix}mapa_fogo_cruzado`
-				WHERE `date` > '1000-00-00'
-				ORDER BY `date` DESC
+				WHERE `uf` = '{$uf}' AND `date` > '1000-00-00'
+				GROUP BY `year`
+				ORDER BY `year` DESC
 				"
 			);
-			$params = $wpdb->get_results(
+			$locations = $wpdb->get_results(
 				"
 				SELECT DISTINCT `region`, `city`, `nbrhd`
 				FROM `{$wpdb->prefix}mapa_fogo_cruzado`
@@ -181,12 +184,12 @@ class Mapa_Fogo_Cruzado_Public {
 			// phpcs:enable
 
 			$data = array(
-				'ufs'    => $ufs,
-				'years'  => $years,
-				'params' => $params,
+				'ufs'       => $ufs,
+				'years'     => $years,
+				'locations' => $locations,
 			);
 
-			set_transient( $transient, $data, HOUR_IN_SECONDS );
+			set_transient( $transient, $data, DAY_IN_SECONDS );
 		}
 
 		wp_send_json_success( $data, 200 );
@@ -200,43 +203,36 @@ class Mapa_Fogo_Cruzado_Public {
 
 		global $wpdb;
 
-		$input     = json_decode( file_get_contents( 'php://input' ) );
-		$transient = 'mapa_fogo_cruzado-' . md5( json_encode( $input ) );
+		$filters   = json_decode( file_get_contents( 'php://input' ) );
+		$chunk     = isset( $filters->chunk ) && intval( $filters->chunk ) >= 0 ? intval( $filters->chunk ) : 0;
+		$transient = 'mapa_fogo_cruzado-' . md5( wp_json_encode( $filters ) );
 		$data      = get_transient( $transient );
 
 		if ( false === $data ) {
-			$date_end   = ! empty( $input->end )
-				? date( 'Y-m-t 23:59:59', $input->end )
+			$date_end   = ! empty( $filters->dates ) && is_array( $filters->dates )
+				? date( 'Y-m-t 23:59:59', end( $filters->dates ) )
 				: date( 'Y-m-t 23:59:59' );
-			$time       = strtotime( '-12 months', strtotime( $date_end ) );
-			$date_start = date( 'Y-m-01 00:00:00', $time );
+			$time_start = strtotime( '-12 months', strtotime( $date_end ) );
+			$date_start = date( 'Y-m-01 00:00:00', $time_start );
 
 			$where = array_filter(
 				array(
 					'1=1',
 					"`date` >= '" . $date_start . "'",
 					"`date` <= '" . $date_end . "'",
-					isset( $input->type ) && 'dead' === $input->type
-						? "`total_dead` > '0'" : false,
-					isset( $input->type ) && 'injured' === $input->type
-						? "`total_injured` > '0'" : false,
-					isset( $input->type ) && 'none' === $input->type
-						? "`total_dead` = '0' AND `total_injured` = '0'" : false,
-					! empty( $input->uf )
-						? "`uf` = '" . $wpdb->_escape( $input->uf ) . "'" : false,
-					! empty( $input->region )
-						? "`region` = '" . $wpdb->_escape( $input->region ) . "'" : false,
-					! empty( $input->cities )
-						? "`city` IN ('" . implode( "','", $wpdb->_escape( $input->cities ) ) . "')" : false,
-					! empty( $input->nbrhds )
-						? "`nbrhd` IN ('" . implode( "','", $wpdb->_escape( $input->nbrhds ) ) . "')" : false,
+					! empty( $filters->uf )
+						? "`uf` = '" . $wpdb->_escape( $filters->uf ) . "'" : "`uf` = 'rj'",
 				)
 			);
+			$where = implode( ' AND ', $where );
 
-			$sql  = "SELECT `date`, `latitude`, `longitude`, `had_police`, `police_dead`, `police_injured`, `total_dead`, `total_injured`, `city`, `uf`, `nbrhd`, `region` FROM `{$wpdb->prefix}mapa_fogo_cruzado` WHERE " . implode( ' AND ', $where ) . ' ORDER BY `date` DESC LIMIT 10000';
+			$count = (int) $wpdb->get_var( "SELECT COUNT(*) FROM `{$wpdb->prefix}mapa_fogo_cruzado` WHERE {$where}" ); // phpcs:ignore
+			$limit = ( ceil( $count / 2 ) * $chunk ) . ',' . ceil( $count / 2 );
+
+			$sql  = "SELECT DATE_FORMAT(`date`, '%Y-%m-%d') as 'date', `lat`, `lng`, `police`, `police_dead`, `police_hurt`, `civil_dead`, `civil_hurt`, `massacre`, `uf`, `region`, `city`, `nbrhd`, `upp` FROM `{$wpdb->prefix}mapa_fogo_cruzado` WHERE {$where} ORDER BY `date` DESC LIMIT {$limit}";
 			$data = $wpdb->get_results( $sql ); // phpcs:ignore
 
-			set_transient( $transient, $data, HOUR_IN_SECONDS );
+			set_transient( $transient, $data, DAY_IN_SECONDS );
 		}
 
 		wp_send_json_success( $data, 200 );
@@ -250,24 +246,33 @@ class Mapa_Fogo_Cruzado_Public {
 
 		$input = json_decode( file_get_contents( 'php://input' ) );
 
-		if ( ! isset( $input->hash, $input->base64 ) ) {
+		if ( ! isset( $input->base64, $input->filters, $input->data, $input->labels ) ) {
 			wp_send_json_error( __( 'Parâmetros incorretos', 'mapa-fogo-cruzado' ), 400 );
 		}
 
-		$hash       = md5( $input->hash );
-		$upload_dir = wp_get_upload_dir();
-		$filename   = $upload_dir['basedir'] . '/mapa-fogo-cruzado/' . $hash . '.png';
-		$fileurl    = $upload_dir['baseurl'] . '/mapa-fogo-cruzado/' . $hash . '.png';
+		$filters_hash = md5( wp_json_encode( $input->filters ) );
+		$image_hash   = md5( wp_json_encode( array_merge( $input->data, $input->labels ) ) );
+		$upload_dir   = wp_get_upload_dir();
+		$filename     = $upload_dir['basedir'] . '/mapa-fogo-cruzado/' . $image_hash . '.png';
+		$fileurl      = $upload_dir['baseurl'] . '/mapa-fogo-cruzado/' . $image_hash . '.png';
+		$result       = array(
+			'image' => $fileurl,
+			'share' => 'hash=' . $filters_hash . '_' . $image_hash,
+		);
+
+		// Saving filters before creating image.
+		$transient = 'mapa_fogo_cruzado-' . $filters_hash;
+		set_transient( $transient, $input->filters, DAY_IN_SECONDS );
 
 		if ( file_exists( $filename ) ) {
-			wp_send_json_success( $fileurl, 304 );
+			wp_send_json_success( $result, 304 );
 		}
 
 		if ( false === file_put_contents( $filename, base64_decode( $input->base64 ) ) ) {
-			wp_send_json_error( $fileurl, 403 );
+			wp_send_json_error( $result, 403 );
 		}
 
-		wp_send_json_success( $fileurl, 201 );
+		wp_send_json_success( $result, 201 );
 
 	}
 
@@ -278,20 +283,62 @@ class Mapa_Fogo_Cruzado_Public {
 
 		$input = json_decode( file_get_contents( 'php://input' ) );
 
-		if ( ! isset( $input->hash ) ) {
+		if ( ! isset( $input->filters, $input->data, $input->labels ) ) {
 			wp_send_json_error( __( 'Parâmetros incorretos', 'mapa-fogo-cruzado' ), 400 );
 		}
 
-		$hash       = md5( $input->hash );
-		$upload_dir = wp_get_upload_dir();
-		$filename   = $upload_dir['basedir'] . '/mapa-fogo-cruzado/' . $hash . '.png';
-		$fileurl    = $upload_dir['baseurl'] . '/mapa-fogo-cruzado/' . $hash . '.png';
+		$filters_hash = md5( wp_json_encode( $input->filters ) );
+		$image_hash   = md5( wp_json_encode( array_merge( $input->data, $input->labels ) ) );
+		$transient    = 'mapa_fogo_cruzado-' . $filters_hash;
+		$upload_dir   = wp_get_upload_dir();
+		$filename     = $upload_dir['basedir'] . '/mapa-fogo-cruzado/' . $image_hash . '.png';
+		$fileurl      = $upload_dir['baseurl'] . '/mapa-fogo-cruzado/' . $image_hash . '.png';
+		$result       = array(
+			'image' => $fileurl,
+			'share' => 'hash=' . $filters_hash . '_' . $image_hash,
+		);
 
-		if ( file_exists( $filename ) ) {
-			wp_send_json_success( $fileurl, 200 );
+		if ( file_exists( $filename ) && false !== get_transient( $transient ) ) {
+			wp_send_json_success( $result, 200 );
 		}
 
 		wp_send_json_success( '', 200 );
+
+	}
+
+	/**
+	 *
+	 */
+	public function set_open_graph_tags() {
+
+		if ( is_page_template( 'mapa-fogo-cruzado-public-display.php' ) && isset( $_GET['hash'] ) ) {
+			list( $filters_hash, $image_hash ) = explode( '_', $_GET['hash'] );
+
+			$upload_dir = wp_get_upload_dir();
+			$filename   = $upload_dir['basedir'] . '/mapa-fogo-cruzado/' . $image_hash . '.png';
+			$fileurl    = $upload_dir['baseurl'] . '/mapa-fogo-cruzado/' . $image_hash . '.png';
+
+			if ( file_exists( $filename ) ) {
+				$title = get_the_title();
+				$url   = add_query_arg( 'hash', $filters_hash . '_' . $image_hash, get_permalink() );
+				echo '<meta property="fb:app_id" content="2372121396378115" />';
+				echo '<meta property="og:title" content="' . $title . '" />';
+				echo '<meta property="og:description" content="' . $title . '" />';
+				echo '<meta property="og:url" content="' . $url . '" />';
+				echo '<meta property="og:image" content="' . $fileurl . '" />';
+				echo '<meta property="og:image:alt" content="Mapa Fogo Cruzado" />';
+				echo '<meta property="og:image:width" content="440" />';
+				echo '<meta property="og:image:height" content="515" />';
+				echo '<meta property="og:type" content="website" />';
+				echo '<meta name="twitter:card" content="summary_large_image">';
+				echo '<meta name="twitter:site" content="@fogocruzadoapp">';
+				echo '<meta name="twitter:title" content="' . $title . '">';
+				echo '<meta name="twitter:description" content="Up than 200 characters.">';
+				echo '<meta name="twitter:creator" content="@fogocruzadoapp">';
+				echo '<meta name="twitter:image" content="' . $fileurl . '">';
+				echo '<meta name="twitter:domain" content="fogocruzado.org.br">';
+			}
+		}
 
 	}
 

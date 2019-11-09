@@ -12,75 +12,19 @@
 	"homepage": "https://fogocruzado.org.br",
 	"repository": "https://github.com/rdourado/mapa-fogo-cruzado-wp-plugin",
 	"bugs": "https://github.com/rdourado/mapa-fogo-cruzado-wp-plugin/issues",
-	"main": "src/index.js",
+	"main": "src/index.jsx",
 	"private": true,
-	"devDependencies": {
-		"@babel/core": "^7.4.4",
-		"@babel/plugin-proposal-class-properties": "^7.4.4",
-		"@babel/plugin-transform-regenerator": "^7.4.5",
-		"@babel/preset-env": "^7.4.5",
-		"@babel/preset-react": "^7.0.0",
-		"@wordpress/browserslist-config": "^2.3.0",
-		"@wordpress/eslint-plugin": "^2.1.0",
-		"babel-eslint": "^10.0.1",
-		"babel-loader": "^8.0.6",
-		"browserslist": "^4.6.0",
-		"chart.js": "^2.8.0",
-		"chartjs-plugin-datalabels": "^0.6.0",
-		"classnames": "^2.2.6",
-		"core-js": "3",
-		"css-loader": "^2.1.1",
-		"eslint": "^5.16.0",
-		"eslint-config-prettier": "^4.2.0",
-		"eslint-config-react-app": "^4.0.1",
-		"eslint-loader": "^2.1.2",
-		"eslint-plugin-flowtype": "2.x",
-		"eslint-plugin-import": "^2.17.2",
-		"eslint-plugin-jsx-a11y": "^6.2.1",
-		"eslint-plugin-prettier": "^3.1.0",
-		"eslint-plugin-react": "^7.13.0",
-		"eslint-plugin-react-hooks": "^1.6.0",
-		"html-webpack-plugin": "^3.2.0",
-		"html-webpack-template": "^6.2.0",
-		"html2canvas": "^1.0.0-rc.1",
-		"is-wsl": "^2.0.0",
-		"mini-css-extract-plugin": "^0.6.0",
-		"moment": "^2.24.0",
-		"optimize-css-assets-webpack-plugin": "^5.0.1",
-		"postcss-loader": "^3.0.0",
-		"postcss-preset-env": "^6.6.0",
-		"postcss-safe-parser": "^4.0.1",
-		"prettier": "1.17.1",
-		"prettier-loader": "^2.1.1",
-		"react": "^16.8.6",
-		"react-chartjs-2": "^2.7.6",
-		"react-click-outside": "^3.0.1",
-		"react-dom": "^16.8.6",
-		"react-google-maps": "^9.4.5",
-		"react-redux": "6.x",
-		"react-redux-loading-bar": "^4.3.0",
-		"recompose": "^0.30.0",
-		"redux": "^4.0.1",
-		"redux-saga": "^1.0.2",
-		"redux-starter-kit": "^0.5.1",
-		"repng": "^3.2.0",
-		"reselect": "^4.0.0",
-		"shortid": "^2.2.14",
-		"style-loader": "^0.23.1",
-		"stylelint": "^10.0.1",
-		"stylelint-config-prettier": "^5.1.0",
-		"stylelint-config-wordpress": "^14.0.0",
-		"stylelint-prettier": "^1.1.0",
-		"terser-webpack-plugin": "^1.2.4",
-		"webpack": "^4.31.0",
-		"webpack-cli": "^3.3.2",
-		"webpack-dev-server": "^3.3.1"
-	},
-	"dependencies": {
-		"@babel/polyfill": "^7.4.4"
-	},
 	"browserslist": [
-		"extends @wordpress/browserslist-config"
+		"> 1%",
+		"ie >= 11",
+		"last 1 Android versions",
+		"last 1 ChromeAndroid versions",
+		"last 2 Chrome versions",
+		"last 2 Firefox versions",
+		"last 2 Safari versions",
+		"last 2 iOS versions",
+		"last 2 Edge versions",
+		"last 2 Opera versions"
 	],
 	"babel": {
 		"presets": [
@@ -91,52 +35,50 @@
 					"corejs": 3
 				}
 			],
-			"@babel/preset-react"
+			[
+				"@babel/preset-react"
+			]
 		],
 		"plugins": [
-			"@babel/plugin-proposal-class-properties",
-			"@babel/plugin-transform-regenerator"
+			"react-hot-loader/babel",
+			"@babel/plugin-transform-regenerator",
+			"@babel/plugin-proposal-class-properties"
 		]
 	},
-	"prettier": {
-		"endOfLine": "lf",
-		"parser": "babel",
-		"printWidth": 100,
-		"semi": false,
-		"singleQuote": true,
-		"tabWidth": 4,
-		"trailingComma": "es5",
-		"useTabs": true
-	},
-	"stylelint": {
-		"extends": [
-			"stylelint-config-wordpress",
-			"stylelint-prettier/recommended"
-		],
-		"rules": {
-			"property-no-unknown": [
-				true,
-				{
-					"ignoreProperties": [
-						"composes"
-					],
-					"checkPrefixed": true
-				}
-			]
-		}
-	},
 	"eslintConfig": {
+		"env": {
+			"browser": true,
+			"es6": true,
+			"node": true
+		},
+		"parser": "babel-eslint",
 		"extends": [
-			"react-app",
+			"eslint:recommended",
+			"plugin:react/recommended",
+			"plugin:jsx-a11y/recommended",
 			"plugin:prettier/recommended"
+		],
+		"parserOptions": {
+			"ecmaFeatures": {
+				"jsx": true
+			},
+			"ecmaVersion": 2018,
+			"sourceType": "module"
+		},
+		"settings": {
+			"react": {
+				"version": "detect"
+			}
+		},
+		"plugins": [
+			"jsx-a11y"
 		],
 		"rules": {
 			"no-console": [
 				"warn"
 			],
-			"react/jsx-curly-spacing": [
-				2,
-				"never"
+			"no-unused-vars": [
+				"warn"
 			],
 			"no-mixed-spaces-and-tabs": [
 				"error",
@@ -147,9 +89,66 @@
 	"eslintIgnore": [
 		"build/*"
 	],
+	"prettier": {
+		"endOfLine": "lf",
+		"parser": "babel",
+		"printWidth": 100,
+		"semi": false,
+		"singleQuote": true,
+		"tabWidth": 4,
+		"trailingComma": "es5",
+		"useTabs": true
+	},
+	"devDependencies": {
+		"@babel/core": "^7.5.5",
+		"@babel/plugin-proposal-class-properties": "^7.5.5",
+		"@babel/plugin-transform-regenerator": "^7.4.5",
+		"@babel/preset-env": "^7.5.5",
+		"@babel/preset-react": "^7.0.0",
+		"babel-eslint": "^10.0.2",
+		"babel-loader": "^8.0.6",
+		"browser-sync": "^2.26.7",
+		"chart.js": "^2.8.0",
+		"chartjs-plugin-datalabels": "^0.6.0",
+		"click-outside": "^2.0.2",
+		"clipboard": "^2.0.4",
+		"core-js": "3",
+		"eslint": "^6.1.0",
+		"eslint-config-prettier": "^6.0.0",
+		"eslint-loader": "^2.2.1",
+		"eslint-plugin-jsx-a11y": "^6.2.3",
+		"eslint-plugin-prettier": "^3.1.0",
+		"eslint-plugin-react": "^7.14.3",
+		"html2canvas": "1.0.0-rc.1",
+		"lodash": "^4.17.15",
+		"moment": "^2.24.0",
+		"prettier": "1.18.2",
+		"prettier-loader": "^2.1.1",
+		"react": "^16.8.6",
+		"react-chartjs-2": "^2.7.6",
+		"react-dom": "^16.8.6",
+		"react-google-maps": "^9.4.5",
+		"react-redux": "^7.1.0",
+		"react-redux-loading-bar": "^4.4.0",
+		"recompose": "^0.30.0",
+		"redux": "^4.0.4",
+		"redux-saga": "^1.0.5",
+		"redux-starter-kit": "^0.6.2",
+		"shortid": "^2.2.14",
+		"styled-components": "^4.3.2",
+		"webpack": "^4.38.0",
+		"webpack-cli": "^3.3.6",
+		"webpack-dev-middleware": "^3.7.0",
+		"webpack-hot-middleware": "^2.25.0"
+	},
+	"dependencies": {
+		"@hot-loader/react-dom": "^16.8.6",
+		"react-hot-loader": "^4.12.10"
+	},
 	"scripts": {
-		"watch": "webpack --env development --watch",
-		"start": "webpack-dev-server --env development --open",
+		"prestart": "docker-compose up -d",
+		"start": "node devServer.js",
+		"stop": "docker-compose down",
 		"build": "webpack --env production"
 	}
 }

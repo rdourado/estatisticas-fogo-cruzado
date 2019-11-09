@@ -4,7 +4,7 @@
 
 namespace Composer\Autoload;
 
-class ComposerStaticInitd46f899c17cc453f26787730a53c7c68
+class ComposerStaticInitdcd242fff830681081c919f060f6913d
 {
     public static $classMap = array (
         'SimpleXLSX' => __DIR__ . '/..' . '/shuchkin/simplexlsx/src/SimpleXLSX.php',
@@ -13,7 +13,7 @@ class ComposerStaticInitd46f899c17cc453f26787730a53c7c68
     public static function getInitializer(ClassLoader $loader)
     {
         return \Closure::bind(function () use ($loader) {
-            $loader->classMap = ComposerStaticInitd46f899c17cc453f26787730a53c7c68::$classMap;
+            $loader->classMap = ComposerStaticInitdcd242fff830681081c919f060f6913d::$classMap;
 
         }, null, ClassLoader::class);
     }

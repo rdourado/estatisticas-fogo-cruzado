@@ -1,71 +1,152 @@
-/**
- * External dependencies
- */
 import React from 'react'
 import { number, shape } from 'prop-types'
-/**
- * Internal dependencies
- */
-import css from './Legend.module.css'
+import parseInt from 'lodash/parseInt'
+import styled from 'styled-components'
+import {
+	breakpoint,
+	colorGreyDark,
+	colorGreyLight,
+	colorOrange,
+	fontSans,
+	rgbGreyDark,
+} from '../../shared/styles'
 
-const _n = (singular, plural, count) => (+count !== 1 ? plural : singular)
+const maybePluralize = (singular, plural, count) => (parseInt(count) !== 1 ? plural : singular)
 
-const Legend = ({ stats }) => (
-	<div className={css.wrap}>
-		<div className={css.main}>
-			<ul className={css.list}>
-				<li className={css.item}>
-					<i className={css.icon} />
-					<strong className={css.value}>{stats.total}</strong>
-					<span className={css.label}>{_n('Tiroteio', 'Tiroteios', stats.total)}</span>
-				</li>
-				<li className={css.item}>
-					<i className={css.icon} />
-					<strong className={css.value}>{stats.policeTotal}</strong>
-					<span className={css.label}>Presença policial</span>
-				</li>
-			</ul>
-			<ul className={css.list}>
-				<li className={css.item}>
-					<i className={css.icon} />
-					<strong className={css.value}>{stats.dead}</strong>
-					<span className={css.label}>{_n('Morto', 'Mortos', stats.dead)}</span>
-				</li>
-				<li className={css.item}>
-					<i className={css.icon} />
-					<strong className={css.value}>{stats.injured}</strong>
-					<span className={css.label}>{_n('Ferido', 'Feridos', stats.injured)}</span>
-				</li>
-			</ul>
-			<ul className={css.list}>
-				<li className={css.item}>
-					<i className={css.icon} />
-					<strong className={css.value}>{stats.policeDead}</strong>
-					<span className={css.label}>
-						{_n('Agente morto', 'Agentes mortos', stats.policeDead)}
-					</span>
-				</li>
-				<li className={css.item}>
-					<i className={css.icon} />
-					<strong className={css.value}>{stats.policeInjured}</strong>
-					<span className={css.label}>
-						{_n('Agente ferido', 'Agentes feridos', stats.policeInjured)}
-					</span>
-				</li>
-			</ul>
-		</div>
-	</div>
+const Legend = props => (
+	<Wrap>
+		<Main>
+			<List>
+				<Item>
+					<Icon />
+					<Value>{props.stats.shootings}</Value>
+					<Label>{maybePluralize('Tiroteio', 'Tiroteios', props.stats.shootings)}</Label>
+				</Item>
+				<Item>
+					<Icon />
+					<Value>{props.stats.policeTotal}</Value>
+					<Label>Presença de agentes</Label>
+				</Item>
+			</List>
+			<List>
+				<Item>
+					<Icon />
+					<Value>{props.stats.peopleDead}</Value>
+					<Label>{maybePluralize('Morto', 'Mortos', props.stats.peopleDead)}</Label>
+				</Item>
+				<Item>
+					<Icon />
+					<Value>{props.stats.peopleHurt}</Value>
+					<Label>{maybePluralize('Ferido', 'Feridos', props.stats.peopleHurt)}</Label>
+				</Item>
+			</List>
+			<List>
+				<Item>
+					<Icon />
+					<Value>{props.stats.policeDead}</Value>
+					<Label>
+						{maybePluralize('Agente morto', 'Agentes mortos', props.stats.policeDead)}
+					</Label>
+				</Item>
+				<Item>
+					<Icon />
+					<Value>{props.stats.policeHurt}</Value>
+					<Label>
+						{maybePluralize('Agente ferido', 'Agentes feridos', props.stats.policeHurt)}
+					</Label>
+				</Item>
+			</List>
+		</Main>
+	</Wrap>
 )
 
 Legend.propTypes = {
 	stats: shape({
-		total: number,
-		dead: number,
-		injured: number,
-		policeTotal: number,
+		peopleDead: number,
+		peopleHurt: number,
 		policeDead: number,
-		policeInjured: number,
+		policeHurt: number,
+		policeTotal: number,
+		shootings: number,
 	}).isRequired,
 }
+
+const Wrap = styled.div`
+	background: rgba(${rgbGreyDark}, 0.9);
+`
+
+const Main = styled.div`
+	justify-content: space-around;
+	margin: 0 auto;
+	max-width: 940px;
+	padding: 10px;
+
+	@media (min-width: ${breakpoint}) {
+		display: flex;
+		flex-wrap: wrap;
+	}
+`
+
+const List = styled.ul`
+	display: flex;
+	font: 12px ${fontSans};
+	list-style: none;
+	margin: 0;
+	padding: 0;
+
+	@media (min-width: ${breakpoint}) {
+		display: block;
+		font-size: 16px;
+	}
+`
+
+const Item = styled.li`
+	align-items: center;
+	display: flex;
+	padding: 4px 0;
+	position: relative;
+	width: 50%;
+
+	@media (min-width: ${breakpoint}) {
+		width: auto;
+	}
+`
+
+const Icon = styled.i`
+	background: ${colorOrange};
+	border-radius: 50%;
+	display: inline-block;
+	height: 1em;
+	margin: 0 0.5em 0 0;
+	position: relative;
+	width: 1em;
+
+	:before {
+		border-right: 1px solid ${colorGreyDark};
+		border-top: 1px solid ${colorGreyDark};
+		box-sizing: border-box;
+		content: '';
+		display: block;
+		left: 0.48em;
+		margin: -0.187em -0.25em;
+		padding: 0.187em;
+		position: absolute;
+		top: 0.5em;
+		transform: rotate(45deg);
+	}
+`
+
+const Value = styled.strong`
+	color: ${colorGreyLight};
+	font: inherit;
+	min-width: 2.5em;
+	text-align: right;
+`
+
+const Label = styled.span`
+	color: #fff;
+	font: inherit;
+	margin-left: 0.5em;
+`
 
 export default Legend

@@ -4,20 +4,20 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "bcd8c172133f8f784e8a446e5bca934e",
+    "content-hash": "099b0c96c512118584276ed698b1fafe",
     "packages": [
         {
             "name": "shuchkin/simplexlsx",
-            "version": "0.8.7",
+            "version": "0.8.8",
             "source": {
                 "type": "git",
                 "url": "https://github.com/shuchkin/simplexlsx.git",
-                "reference": "5211d7ca34a96ad2b2a3d422ca15f6d05c37c1d5"
+                "reference": "eb1073b171824e1c685a8f95b4fb631b775fab45"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/shuchkin/simplexlsx/zipball/5211d7ca34a96ad2b2a3d422ca15f6d05c37c1d5",
-                "reference": "5211d7ca34a96ad2b2a3d422ca15f6d05c37c1d5",
+                "url": "https://api.github.com/repos/shuchkin/simplexlsx/zipball/eb1073b171824e1c685a8f95b4fb631b775fab45",
+                "reference": "eb1073b171824e1c685a8f95b4fb631b775fab45",
                 "shasum": ""
             },
             "require": {
@@ -51,7 +51,7 @@
                 "php",
                 "xlsx"
             ],
-            "time": "2019-04-18T10:53:01+00:00"
+            "time": "2019-06-19T17:28:00+00:00"
         }
     ],
     "packages-dev": [],

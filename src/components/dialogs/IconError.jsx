@@ -1,7 +1,7 @@
 import React from 'react'
 
-const ErrorIcon = () => (
-	<svg version="1.1" viewBox="0 0 496.158 496.158">
+const IconError = props => (
+	<svg version="1.1" viewBox="0 0 496.158 496.158" {...props}>
 		<path
 			style={{ fill: '#e04f5f' }}
 			d="M496.158,248.085c0-137.021-111.07-248.082-248.076-248.082C111.07,0.003,0,111.063,0,248.085
@@ -18,4 +18,4 @@ const ErrorIcon = () => (
 	</svg>
 )
 
-export default ErrorIcon
+export default IconError

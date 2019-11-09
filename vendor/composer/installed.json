@@ -1,17 +1,17 @@
 [
     {
         "name": "shuchkin/simplexlsx",
-        "version": "0.8.7",
-        "version_normalized": "0.8.7.0",
+        "version": "0.8.8",
+        "version_normalized": "0.8.8.0",
         "source": {
             "type": "git",
             "url": "https://github.com/shuchkin/simplexlsx.git",
-            "reference": "5211d7ca34a96ad2b2a3d422ca15f6d05c37c1d5"
+            "reference": "eb1073b171824e1c685a8f95b4fb631b775fab45"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/shuchkin/simplexlsx/zipball/5211d7ca34a96ad2b2a3d422ca15f6d05c37c1d5",
-            "reference": "5211d7ca34a96ad2b2a3d422ca15f6d05c37c1d5",
+            "url": "https://api.github.com/repos/shuchkin/simplexlsx/zipball/eb1073b171824e1c685a8f95b4fb631b775fab45",
+            "reference": "eb1073b171824e1c685a8f95b4fb631b775fab45",
             "shasum": ""
         },
         "require": {
@@ -19,7 +19,7 @@
             "ext-simplexml": "*",
             "ext-zlib": "*"
         },
-        "time": "2019-04-18T10:53:01+00:00",
+        "time": "2019-06-19T17:28:00+00:00",
         "type": "library",
         "installation-source": "dist",
         "autoload": {

@@ -209,9 +209,52 @@ class Mapa_Fogo_Cruzado_Admin {
 	/**
 	 *
 	 */
-	private function sanitize_text( $text ) {
+	private function string_val( $value ) {
 
-		return '1970-01-01 00:00:00' === $text || '?' === $text || '-' === $text ? '' : $text;
+		$value   = strval( $value );
+		$invalid = array(
+			'1970-01-01 00:00:00',
+			'?',
+			'-',
+			'–',
+			'—',
+			'N/A',
+			'n/a',
+			'Não informado',
+			'não informado',
+		);
+
+		return in_array( $value, $invalid ) ? '' : $value;
+
+	}
+
+	/**
+	 *
+	 */
+	private function boolean_val( $value ) {
+
+		$value = $this->string_val( $value );
+		return intval( $value ) === 1 || strtolower( $value ) === 'sim' ? 1 : 0;
+
+	}
+
+	/**
+	 *
+	 */
+	private function integer_val( $value ) {
+
+		$value = $this->string_val( $value );
+		return is_numeric( $value ) ? intval( $value ) : false;
+
+	}
+
+	/**
+	 *
+	 */
+	private function float_val( $value ) {
+
+		$value = $this->string_val( $value );
+		return is_numeric( $value ) ? floatval( $value ) : false;
 
 	}
 
@@ -225,8 +268,8 @@ class Mapa_Fogo_Cruzado_Admin {
 		global $wpdb;
 		$wpdb->hide_errors();
 
-		$id        = $_POST['attachment_id'];
-		$file      = get_attached_file( $id );
+		$attach_id = isset( $_POST['attachment_id'] ) ? $_POST['attachment_id'] : 0;
+		$file      = get_attached_file( $attach_id );
 		$xlsx      = SimpleXLSX::parse( $file );
 		$errors    = array();
 		$lines_in  = 0;
@@ -237,67 +280,88 @@ class Mapa_Fogo_Cruzado_Admin {
 		}
 
 		foreach ( $xlsx->sheetNames() as $sheet_index => $uf ) {
-			if ( ! in_array( strtoupper( $uf ), $this->valid_ufs ) ) {
+			if ( ! in_array( strtoupper( $uf ), $this->valid_ufs ) ) { // Skip sheets not named as UFs.
 				continue 1;
 			}
 
 			foreach ( $xlsx->rows( $sheet_index ) as $row_index => $row ) {
-				if ( ! $row_index ) { // Skip header
+				if ( ! $row_index ) { // Skip header.
 					continue 1;
 				}
 
 				list(
-					$id,
-					$street,
+					$external_id,
+					,
 					$day,
 					$month,
 					$year,
 					$lat,
 					$lng,
-					$had_police,
+					$police,
+					$civil_dead,
 					$police_dead,
-					$police_injured,
-					$total_dead,
-					$total_injured,
-					$was_slaughter,
+					$civil_hurt,
+					$police_hurt,
+					,
+					,
+					$massacre,
 					$nbrhd,
 					$city,
 					$region,
 					$upp
 				) = $row;
 
-				// Empty line?
-				if ( ( empty( $city ) || '1970-01-01 00:00:00' === $city ) && ( empty( $region ) || '1970-01-01 00:00:00' === $region ) ) {
+				// Check if line is empty.
+				$city   = $this->string_val( $city );
+				$region = $this->string_val( $region );
+				if ( empty( $city ) && empty( $region ) ) {
 					continue 1;
 				}
 
 				$is_valid = true;
 
-				// Format date
+				// Set types.
+				$external_id = $this->integer_val( $external_id );
+				$day         = $this->integer_val( $day );
+				$month       = $this->integer_val( $month );
+				$year        = $this->integer_val( $year );
+				$lat         = $this->float_val( $lat );
+				$lng         = $this->float_val( $lng );
+				$police      = $this->boolean_val( $police );
+				$massacre    = $this->boolean_val( $massacre );
+				$police_dead = $this->integer_val( $police_dead );
+				$police_hurt = $this->integer_val( $police_hurt );
+				$civil_dead  = $this->integer_val( $civil_dead );
+				$civil_hurt  = $this->integer_val( $civil_hurt );
+				$nbrhd       = $this->string_val( $nbrhd );
+				$upp         = $this->string_val( $upp );
+
+				// Format date.
 				$formatted_date = date_create_from_format( 'd/m/Y', strval( $day . '/' . $month . '/' . $year ) );
 
-				// Check for errors
-				if ( ! $formatted_date || '1970-01-01 00:00:00' === $formatted_date ) {
+				// Check for errors.
+				if ( ! $formatted_date ) {
 					$is_valid = false;
-					// translators: $1: nome da tabela do Excel $2: número da linha
-					$errors[] = sprintf( __( '[%1$s] Linha %2$d: Data não está formatada como texto ou não segue o padrão dd/mm/aaaa', 'mapa-fogo-cruzado' ), $uf, $row_index + 1 );
+					// translators: $1: nome da tabela do Excel $2: número da linha.
+					$errors[] = sprintf( __( '[%1$s] Linha %2$d: Valores inválidos nas colunas 3 (dia), 4 (mês), e 5 (ano).', 'mapa-fogo-cruzado' ), $uf, $row_index + 1 );
 				}
-				if ( empty( $region ) || '1970-01-01 00:00:00' === $region ) {
+				if ( empty( $city ) ) {
 					$is_valid = false;
-					// translators: $1: nome da tabela do Excel $2: número da linha
-					$errors[] = sprintf( __( '[%1$s] Linha %2$d: Região não informada', 'mapa-fogo-cruzado' ), $uf, $row_index + 1 );
+					// translators: $1: nome da tabela do Excel $2: número da linha.
+					$errors[] = sprintf( __( '[%1$s] Linha %2$d: Cidade não informada na coluna 17.', 'mapa-fogo-cruzado' ), $uf, $row_index + 1 );
 				}
-				if ( empty( $city ) || '1970-01-01 00:00:00' === $city ) {
+				if ( empty( $region ) ) {
 					$is_valid = false;
-					// translators: $1: nome da tabela do Excel $2: número da linha
-					$errors[] = sprintf( __( '[%1$s] Linha %2$d: Cidade não informada', 'mapa-fogo-cruzado' ), $uf, $row_index + 1 );
+					// translators: $1: nome da tabela do Excel $2: número da linha.
+					$errors[] = sprintf( __( '[%1$s] Linha %2$d: Região não informada na coluna 18.', 'mapa-fogo-cruzado' ), $uf, $row_index + 1 );
 				}
-				// if ( empty( $nbrhd ) ) {
-				// 	$is_valid = false;
-				// 	// translators: $1: nome da tabela do Excel $2: número da linha
-				// 	$errors[] = sprintf( __( '[%1$s] Linha %2$d: Bairro não informado', 'mapa-fogo-cruzado' ), $uf, $row_index + 1 );
-				// }
+				if ( false === $civil_dead || false === $police_dead || false === $civil_hurt || false === $police_hurt ) {
+					$is_valid = false;
+					// translators: $1: nome da tabela do Excel $2: número da linha.
+					$errors[] = sprintf( __( '[%1$s] Linha %2$d: Foram encontrados dados não numéricos nas colunas 9, 10, 11 e 12.', 'mapa-fogo-cruzado' ), $uf, $row_index + 1 );
+				}
 				if ( $lines_out + 1 >= 200 ) {
+					wp_delete_attachment( $attach_id, true );
 					wp_send_json_error(
 						array(
 							'errors'   => $errors,
@@ -308,60 +372,69 @@ class Mapa_Fogo_Cruzado_Admin {
 					);
 				}
 				if ( ! $is_valid ) {
-					$lines_out += 1;
+					$lines_out++;
 					continue 1;
 				}
 
-				// Insert payload
-				$data   = array(
-					'external_id'    => intval( $id ),
-					'date'           => date_format( $formatted_date, 'Y-m-d H:i:s' ),
-					'latitude'       => floatval( $lat ),
-					'longitude'      => floatval( $lng ),
-					'had_police'     => intval( $had_police ),
-					'police_dead'    => intval( $police_dead ),
-					'police_injured' => intval( $police_injured ),
-					'total_dead'     => intval( $total_dead ),
-					'total_injured'  => intval( $total_injured ),
-					'was_slaughter'  => 'Sim' === $was_slaughter,
-					'city'           => $this->sanitize_text( $city ),
-					'street'         => $this->sanitize_text( $street ),
-					'nbrhd'          => $this->sanitize_text( $nbrhd ),
-					'upp'            => $this->sanitize_text( $upp ),
-					'region'         => $this->sanitize_text( $region ),
-					'uf'             => strtolower( $uf ),
+				// Insert payload.
+				$row = array(
+					array( '%d', 'external_id', $external_id ),
+					array( '%s', 'date', date_format( $formatted_date, 'Y-m-d H:i:s' ) ),
+					array( '%f', 'lat', $lat ),
+					array( '%f', 'lng', $lng ),
+					array( '%d', 'police', $police ),
+					array( '%d', 'police_dead', $police_dead ),
+					array( '%d', 'police_hurt', $police_hurt ),
+					array( '%d', 'civil_dead', $civil_dead ),
+					array( '%d', 'civil_hurt', $civil_hurt ),
+					array( '%d', 'massacre', $massacre ),
+					array( '%s', 'uf', strtolower( $uf ) ),
+					array( '%s', 'region', $region ),
+					array( '%s', 'city', $city ),
+					array( '%s', 'nbrhd', $nbrhd ),
+					array( '%s', 'upp', $upp ),
 				);
-				$format = array(
-					'%d',
-					'%s',
-					'%f',
-					'%f',
-					'%d',
-					'%d',
-					'%d',
-					'%d',
-					'%d',
-					'%d',
-					'%s',
-					'%s',
-					'%s',
-					'%s',
-					'%s',
-					'%s',
+
+				$data = array_reduce(
+					$row,
+					function( $carry, $col ) {
+						$carry[ $col[1] ] = $col[2];
+						return $carry;
+					},
+					array()
+				);
+
+				$format = array_map(
+					function( $col ) {
+						return $col[0];
+					},
+					$row
 				);
 
 				$response = $wpdb->replace( $wpdb->prefix . 'mapa_fogo_cruzado', $data, $format );
+
 				if ( $response ) {
-					$lines_in += 1;
+					$lines_in++;
 				} else {
-					$lines_out += 1;
-					// translators: $1: nome da tabela do Excel $2: número da linha $3: erro mysql
+					$lines_out++;
+					// translators: $1: nome da tabela do Excel $2: número da linha $3: erro mysql.
 					$errors[] = sprintf( __( '[%1$s] Linha %2$d: %3$s', 'mapa-fogo-cruzado' ), $uf, $row_index + 1, $wpdb->last_error );
 				}
 			}
+
+			// Delete params transient.
+			$uf        = strtolower( trim( $uf ) );
+			$transient = 'mapa_fogo_cruzado-' . md5( wp_json_encode( $uf ) );
+			delete_transient( $uf );
 		}
 
-		wp_delete_attachment( $id, true );
+		// Delete uploaded file.
+		wp_delete_attachment( $attach_id, true );
+
+		// Clear transients.
+		$wpdb->query( $wpdb->prepare( "DELETE FROM $wpdb->options WHERE `option_name` LIKE %s ", '%_transient%mapa_fogo_cruzado%' ) );
+
+		// Response.
 		wp_send_json_success(
 			array(
 				'errors'   => $errors,

@@ -1,34 +1,46 @@
-/**
- * External dependencies
- */
 import React from 'react'
-import { arrayOf, func, string, number } from 'prop-types'
-/**
- * Internal dependencies
- */
+import { arrayOf, func, shape, string, number } from 'prop-types'
+import styled from 'styled-components'
 import UFs from './UFs'
 import Years from './Years'
-import css from './Primary.module.css'
 
-const Primary = ({ allUFs, allYears, currentUF, currentYear, onSelectUF, onSelectYear }) => (
-	<div className={css.main}>
-		<UFs className={css.ufs} list={allUFs} current={currentUF} onSelect={onSelectUF} />
-		<Years
-			className={css.years}
-			list={allYears}
-			current={currentYear}
-			onSelect={onSelectYear}
+const Primary = props => (
+	<Main>
+		<UFs
+			allUFs={props.allUFs}
+			currentUF={props.currentUF}
+			dispatchSelectUF={props.dispatchSelectUF}
 		/>
-	</div>
+		<Years
+			allYears={props.allYears}
+			currentYear={props.currentYear}
+			dispatchSelectYear={props.onSelectYear}
+		/>
+	</Main>
 )
 
 Primary.propTypes = {
 	allUFs: arrayOf(string).isRequired,
-	allYears: arrayOf(number).isRequired,
+	allYears: arrayOf(
+		shape({
+			year: number,
+			firstDate: number,
+			lastDate: number,
+		})
+	).isRequired,
 	currentUF: string.isRequired,
 	currentYear: number.isRequired,
-	onSelectUF: func.isRequired,
+	dispatchSelectUF: func.isRequired,
 	onSelectYear: func.isRequired,
 }
+
+const Main = styled.div`
+	align-items: flex-end;
+	display: flex;
+	justify-content: space-between;
+	margin: 0 auto;
+	max-width: 940px;
+	padding: 30px 10px 0;
+`
 
 export default Primary
