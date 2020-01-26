@@ -1,104 +1,114 @@
-/**
- * External dependencies
- */
-import React, { Component } from 'react'
+import React, { useCallback, useState } from 'react'
 import { arrayOf, func, number, shape, string } from 'prop-types'
-import classnames from 'classnames'
-import clickOutside from 'react-click-outside'
-import LoadingBar from 'react-redux-loading-bar'
-/**
- * Internal dependencies
- */
+import clickOutside from 'click-outside'
+import ReactLoadingBar from 'react-redux-loading-bar'
+import styled from 'styled-components'
+import {
+	Close as CloseYears,
+	Details as DetailsYears,
+	List as ListYears,
+	Main as MainYears,
+	Modal as ModalYears,
+	Summary as SummaryYears,
+} from './Years'
 import Calendar from './Calendar'
 import Submenu from './Submenu'
-import css from './Secondary.module.css'
+import { breakpoint, colorOrange, rgbMetal } from '../../shared/styles'
 
-class Secondary extends Component {
-	state = { isOpen: false, subOpen: 0 }
+const Secondary = props => {
+	const [isOpen, setStatus] = useState(false)
+	const [subOpen, setSubStatus] = useState(0)
 
-	handleClickOutside = () => this.setState({ isOpen: false, subOpen: 0 })
+	const mainRef = useCallback(node => {
+		if (node !== null) {
+			clickOutside(node, handleClickOutside)
+		}
+	}, [])
 
-	handleToggle = () => this.setState({ isOpen: !this.state.isOpen })
-
-	handleSub = subOpen => () => this.setState({ subOpen })
-
-	handleSelect = param => value => {
-		this.props.onSelect(param)(value)
-		this.handleClickOutside()
+	function handleClickOutside() {
+		setStatus(false)
+		setSubStatus(0)
 	}
 
-	render() {
-		const { className } = this.props
-		const { isOpen, subOpen } = this.state
-
-		return (
-			<div className={classnames(css.main, className)}>
-				<button type="button" className={css.summary} onClick={this.handleToggle}>
-					Filtre os dados
-				</button>
-				<div className={isOpen ? css.details_ : css.details}>
-					<div className={css.modal} title="Filtre os dados">
-						<button className={css.close} onClick={this.handleToggle}>
-							X
-						</button>
-						<ul className={css.list}>
-							<Submenu
-								label="Data"
-								title="Escolha uma data ou período"
-								className={css.submenu}
-								isOpen={subOpen === 1}
-								showMenu={this.handleSub(1)}
-								hideMenu={this.handleSub(0)}
-								onSelect={this.handleSelect('date')}
-							>
-								<Calendar
-									selectedValue={this.props.currentDateRange}
-									validateDate={this.props.validateDate}
-								/>
-							</Submenu>
-							<Submenu
-								title="Vítimas"
-								isOpen={subOpen === 2}
-								showMenu={this.handleSub(2)}
-								hideMenu={this.handleSub(0)}
-								onSelect={this.handleSelect('type')}
-								options={this.props.allTypes}
-								current={this.props.currentType}
-							/>
-							<Submenu
-								title="Região"
-								isOpen={subOpen === 3}
-								showMenu={this.handleSub(3)}
-								hideMenu={this.handleSub(0)}
-								onSelect={this.handleSelect('region')}
-								options={this.props.allRegions}
-								current={this.props.currentRegion}
-							/>
-							<Submenu
-								title="Município"
-								isOpen={subOpen === 4}
-								showMenu={this.handleSub(4)}
-								hideMenu={this.handleSub(0)}
-								onSelect={this.handleSelect('city')}
-								options={this.props.allCities}
-								current={this.props.currentCities}
-							/>
-							<Submenu
-								title="Bairro"
-								isOpen={subOpen === 5}
-								showMenu={this.handleSub(5)}
-								hideMenu={this.handleSub(0)}
-								onSelect={this.handleSelect('nbrhd')}
-								options={this.props.allNBRHDs}
-								current={this.props.currentNBRHDs}
-							/>
-						</ul>
-					</div>
-				</div>
-				<LoadingBar className={css.loadingbar} />
-			</div>
-		)
+	function handleToggle() {
+		setStatus(!isOpen)
 	}
+
+	function createHandleSub(subOpen) {
+		return () => setSubStatus(subOpen)
+	}
+
+	function createHandleSelect(param) {
+		return value => {
+			props.onSelect(param)(value)
+			handleClickOutside()
+		}
+	}
+
+	return (
+		<Main ref={mainRef}>
+			<Summary type="button" onClick={handleToggle}>
+				Filtre os dados
+			</Summary>
+			<Details isopen={isOpen ? 1 : 0}>
+				<Modal title="Filtre os dados">
+					<Close onClick={handleToggle}>X</Close>
+					<List>
+						<Submenu
+							label="Data"
+							title="Escolha uma data ou período"
+							isOpen={subOpen === 1}
+							showMenu={createHandleSub(1)}
+							hideMenu={createHandleSub(0)}
+							onSelect={createHandleSelect('date')}
+						>
+							<Calendar
+								selectedValue={props.currentDateRange}
+								validateDate={props.validateDate}
+							/>
+						</Submenu>
+						<Submenu
+							title="Vítimas"
+							isOpen={subOpen === 2}
+							showMenu={createHandleSub(2)}
+							hideMenu={createHandleSub(0)}
+							onSelect={createHandleSelect('type')}
+							options={props.allTypes}
+							current={props.currentType}
+						/>
+						<Submenu
+							title="Região"
+							isOpen={subOpen === 3}
+							showMenu={createHandleSub(3)}
+							hideMenu={createHandleSub(0)}
+							onSelect={createHandleSelect('region')}
+							options={props.allRegions}
+							current={props.currentRegions}
+						/>
+						<Submenu
+							title="Município"
+							isOpen={subOpen === 4}
+							showMenu={createHandleSub(4)}
+							hideMenu={createHandleSub(0)}
+							onSelect={createHandleSelect('city')}
+							options={props.allCities}
+							current={props.currentCities}
+						/>
+						<Submenu
+							title="Bairro"
+							isOpen={subOpen === 5}
+							showMenu={createHandleSub(5)}
+							hideMenu={createHandleSub(0)}
+							onSelect={createHandleSelect('nbrhd')}
+							options={props.allNBRHDs}
+							current={props.currentNBRHDs}
+						/>
+					</List>
+				</Modal>
+			</Details>
+			<LoadingBar />
+		</Main>
+	)
 }
 
 Secondary.propTypes = {
@@ -109,11 +119,80 @@ Secondary.propTypes = {
 	onSelect: func.isRequired,
 	currentDateRange: arrayOf(number).isRequired,
 	currentType: string,
-	currentRegion: string,
+	currentRegions: arrayOf(string),
 	currentCities: arrayOf(string),
 	currentNBRHDs: arrayOf(string),
 	validateDate: func,
-	className: string,
 }
 
-export default clickOutside(Secondary)
+const Main = styled(MainYears)`
+	margin: 15px 20px 30px;
+
+	@media (min-width: ${breakpoint}) {
+		margin: 0;
+		position: relative;
+		width: auto
+		z-index: 5;
+
+		:before,
+		:after {
+			display: none;
+		}
+	}
+`
+
+const Summary = styled(SummaryYears)`
+	text-align: left;
+
+	@media (min-width: ${breakpoint}) {
+		display: none;
+	}
+`
+
+const Details = styled(DetailsYears)`
+	@media (min-width: ${breakpoint}) {
+		background: ${colorOrange};
+		box-shadow: 0 6px 0 0 rgba(${rgbMetal}, 0.5);
+		display: block;
+		margin: 0;
+		padding: 0;
+		position: static;
+	}
+`
+
+const Modal = styled(ModalYears)`
+	@media (min-width: ${breakpoint}) {
+		background: transparent;
+		border-radius: 0;
+		box-shadow: none;
+		max-width: none;
+		padding: 0;
+
+		:before {
+			display: none;
+		}
+	}
+`
+
+const Close = styled(CloseYears)`
+	@media (min-width: ${breakpoint}) {
+		display: none;
+	}
+`
+
+const List = styled(ListYears)`
+	@media (min-width: ${breakpoint}) {
+		display: flex;
+		margin: 0 auto;
+		max-width: 940px;
+		padding: 0 10px;
+	}
+`
+
+const LoadingBar = styled(ReactLoadingBar)`
+	background-color: white;
+	height: 5px;
+	position: absolute;
+`
+
+export default Secondary

@@ -1,69 +1,145 @@
-/**
- * External dependencies
- */
-import React, { Component } from 'react'
+import React, { useCallback, useState } from 'react'
 import { arrayOf, func, string } from 'prop-types'
-import classnames from 'classnames'
-import clickOutside from 'react-click-outside'
-/**
- * Internal dependencies
- */
-import css from './UFs.module.css'
+import clickOutside from 'click-outside'
+import styled from 'styled-components'
+import { breakpoint, colorGrey, colorOrange, fontSans } from '../../shared/styles'
+import {
+	Close,
+	Details as DetailsYears,
+	Item as ItemYears,
+	Link as LinkYears,
+	List as ListYears,
+	Main as MainYears,
+	Modal as ModalYears,
+	Summary as SummaryYears,
+} from './Years'
 
-class UFs extends Component {
-	state = { isOpen: false }
+const UFs = props => {
+	const [isOpen, setStatus] = useState(false)
 
-	handleClickOutside = () => this.setState({ isOpen: false })
+	const mainRef = useCallback(node => {
+		if (node !== null) {
+			clickOutside(node, handleClickOutside)
+		}
+	}, [])
 
-	handleToggle = () => this.setState({ isOpen: !this.state.isOpen })
-
-	handleSelect = uf => () => {
-		this.props.onSelect(uf)
-		this.handleClickOutside()
+	function handleClickOutside() {
+		setStatus(false)
 	}
 
-	render() {
-		const { list, className, current } = this.props
-		const { isOpen } = this.state
-
-		return (
-			<div className={classnames(css.main, className)}>
-				<button type="button" className={css.summary} onClick={this.handleToggle}>
-					Estado
-				</button>
-				<div className={isOpen ? css.details_ : css.details}>
-					<div className={css.modal} title="Estado">
-						<button className={css.close} onClick={this.handleToggle}>
-							X
-						</button>
-						<ul className={css.list}>
-							{list.map(uf => (
-								<li key={uf} className={css.item}>
-									<button
-										type="button"
-										className={classnames({
-											[css.link]: true,
-											[css.active]: uf === current,
-										})}
-										onClick={this.handleSelect(uf)}
-									>
-										{uf.toUpperCase()}
-									</button>
-								</li>
-							))}
-						</ul>
-					</div>
-				</div>
-			</div>
-		)
+	function handleToggle() {
+		setStatus(!isOpen)
 	}
+
+	function handleSelect(uf) {
+		return () => {
+			props.dispatchSelectUF(uf)
+			handleClickOutside()
+		}
+	}
+
+	return (
+		<Main ref={mainRef}>
+			<Summary type="button" onClick={handleToggle}>
+				Estado
+			</Summary>
+			<Details isopen={isOpen ? 1 : 0}>
+				<Modal title="Estado">
+					<Close onClick={handleToggle}>X</Close>
+					<List>
+						{props.allUFs.map(uf => (
+							<Item key={uf}>
+								<Link
+									type="button"
+									isactive={uf === props.currentUF ? 1 : 0}
+									onClick={handleSelect(uf)}
+								>
+									{uf.toUpperCase()}
+								</Link>
+							</Item>
+						))}
+					</List>
+				</Modal>
+			</Details>
+		</Main>
+	)
 }
 
 UFs.propTypes = {
-	className: string,
-	current: string.isRequired,
-	list: arrayOf(string).isRequired,
-	onSelect: func,
+	allUFs: arrayOf(string).isRequired,
+	currentUF: string.isRequired,
+	dispatchSelectUF: func,
 }
 
-export default clickOutside(UFs)
+const Main = styled(MainYears)`
+	margin: 0 10px;
+	width: calc(100% - 20px);
+
+	@media (min-width: ${breakpoint}) {
+		background: transparent;
+		margin: 0 auto 0 0;
+		width: auto;
+
+		:before,
+		:after {
+			display: none;
+		}
+	}
+`
+
+const Summary = styled(SummaryYears)`
+	@media (min-width: ${breakpoint}) {
+		display: none;
+	}
+`
+
+const Details = styled(DetailsYears)`
+	@media (min-width: ${breakpoint}) {
+		display: block;
+		margin: 0;
+		position: static;
+	}
+`
+
+const Modal = styled(ModalYears)`
+	@media (min-width: ${breakpoint}) {
+		background: transparent;
+		font: 18px/24px ${fontSans};
+	}
+`
+
+const List = styled(ListYears)`
+	@media (min-width: ${breakpoint}) {
+		display: flex;
+		padding: 0;
+	}
+`
+
+const Item = styled(ItemYears)`
+	@media (min-width: ${breakpoint}) {
+		margin: 0 3px 0 0;
+	}
+`
+
+const Link = styled(LinkYears)`
+	transition: none;
+
+	@media (min-width: ${breakpoint}) {
+		background: ${({ isactive }) => (isactive ? colorOrange : colorGrey)};
+		border-radius: 8px 8px 0 0;
+		padding: 17px 25px 13px;
+
+		&,
+		:link,
+		:visited {
+			color: #fff;
+		}
+
+		:hover,
+		:focus {
+			background: ${colorOrange};
+		}
+	}
+`
+
+export default UFs

@@ -8,7 +8,7 @@ merge(defaults, {
 	global: {
 		animation: false,
 		defaultFontColor: '#fff',
-		defaultFontFamily: 'Roboto, "Helvetica Neue", Arial, sans-serif',
+		defaultFontFamily: '"Roboto Condensed", "Helvetica Neue", Arial, sans-serif',
 		defaultFontSize: 14,
 		legend: {
 			display: false,
@@ -37,7 +37,7 @@ const options = {
 		xAxes: [
 			{
 				gridLines: { color: 'transparent' },
-				ticks: { fontSize: 10 },
+				ticks: { beginAtZero: true, fontSize: 10 },
 			},
 		],
 	},

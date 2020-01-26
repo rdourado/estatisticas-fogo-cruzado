@@ -1,27 +1,21 @@
-/**
- * External dependencies
- */
 import React from 'react'
+import { arrayOf, object, shape, string, number } from 'prop-types'
 import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
-import { arrayOf, object, shape, string, number } from 'prop-types'
 import moment from 'moment'
 import pick from 'lodash/pick'
-/**
- * Internal dependencies
- */
-import * as actions from '../../flux/actions'
 import { selectRegions, selectCities, selectNBRHDs } from '../../flux/selectors'
+import * as actions from '../../flux/actions'
 import Primary from './Primary'
 import Secondary from './Secondary'
 
-class FiltersContainer extends React.Component {
-	onSelectUF = uf => this.props.actions.updateUF(uf)
+const FiltersContainer = props => {
+	const dispatchSelectUF = uf => props.actions.updateUF(uf)
 
-	onSelectYear = year => this.props.actions.updateYear(year)
+	const onSelectYear = year => props.actions.updateYear(year)
 
-	onSelectParam = param => value => {
-		const { actions } = this.props
+	const onSelectParam = param => value => {
+		const { actions } = props
 		switch (param) {
 			case 'type':
 				return actions.updateType(value)
@@ -43,52 +37,69 @@ class FiltersContainer extends React.Component {
 		}
 	}
 
-	validateDate = date =>
-		date.isSame(moment().year(this.props.currentYear), 'year') &&
-		date.isSameOrBefore(moment(), 'day')
-
-	render() {
-		return (
-			<nav>
-				<Primary
-					allUFs={this.props.allUFs}
-					allYears={this.props.allYears}
-					currentUF={this.props.currentUF}
-					currentYear={this.props.currentYear}
-					onSelectUF={this.onSelectUF}
-					onSelectYear={this.onSelectYear}
-				/>
-				<Secondary
-					allTypes={this.props.allTypes}
-					allRegions={this.props.allRegions}
-					allCities={this.props.allCities}
-					allNBRHDs={this.props.allNBRHDs}
-					currentType={this.props.currentType}
-					currentRegion={this.props.currentRegion}
-					currentCities={this.props.currentCities}
-					currentNBRHDs={this.props.currentNBRHDs}
-					currentDateRange={this.props.currentDateRange}
-					onSelect={this.onSelectParam}
-					validateDate={this.validateDate}
-				/>
-			</nav>
+	const validateDate = date =>
+		date.isSame(moment().year(props.currentYear), 'year') &&
+		date.isBetween(
+			moment.unix(props.validDateRange[0]),
+			moment.unix(props.validDateRange[1]),
+			'day',
+			'[]'
 		)
-	}
+
+	return (
+		<nav>
+			<Primary
+				allUFs={props.allUFs}
+				allYears={props.allYears}
+				currentUF={props.currentUF}
+				currentYear={props.currentYear}
+				dispatchSelectUF={dispatchSelectUF}
+				onSelectYear={onSelectYear}
+			/>
+			<Secondary
+				allTypes={props.allTypes}
+				allRegions={props.allRegions}
+				allCities={props.allCities}
+				allNBRHDs={props.allNBRHDs}
+				currentType={props.currentType}
+				currentRegions={props.currentRegions}
+				currentCities={props.currentCities}
+				currentNBRHDs={props.currentNBRHDs}
+				currentDateRange={props.currentDateRange}
+				onSelect={onSelectParam}
+				validateDate={validateDate}
+			/>
+		</nav>
+	)
 }
 
 FiltersContainer.propTypes = {
 	actions: object,
 	allUFs: arrayOf(string),
-	allYears: arrayOf(number),
-	allTypes: arrayOf(shape({ label: string, value: string })),
+	allYears: arrayOf(
+		shape({
+			year: number,
+			firstDate: number,
+			lastDate: number,
+		})
+	),
+	allTypes: arrayOf(
+		shape({
+			label: string,
+			value: string,
+		})
+	),
 	allRegions: arrayOf(string),
+	allCities: arrayOf(string),
+	allNBRHDs: arrayOf(string),
 	currentUF: string,
 	currentYear: number,
 	currentType: string,
-	currentRegion: string,
+	currentRegions: arrayOf(string),
 	currentCities: arrayOf(string),
 	currentNBRHDs: arrayOf(string),
 	currentDateRange: arrayOf(number),
+	validDateRange: arrayOf(number),
 }
 
 const mapStateToProps = ({ state }) => ({
@@ -101,10 +112,11 @@ const mapStateToProps = ({ state }) => ({
 	currentUF: state.currentUF,
 	currentYear: state.currentYear,
 	currentType: state.currentType,
-	currentRegion: state.currentRegion,
+	currentRegions: state.currentRegions,
 	currentCities: state.currentCities,
 	currentNBRHDs: state.currentNBRHDs,
 	currentDateRange: state.currentDateRange,
+	validDateRange: state.validDateRange,
 })
 
 const mapDispatchToProps = dispatch => ({

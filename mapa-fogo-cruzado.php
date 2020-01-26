@@ -9,14 +9,14 @@
  * that starts the plugin.
  *
  * @link              http://rafaeldourado.com.br
- * @since             1.0.0
+ * @since             1.0.1
  * @package           Mapa_Fogo_Cruzado
  *
  * @wordpress-plugin
  * Plugin Name:       Mapa Fogo Cruzado
  * Plugin URI:        https://github.com/rdourado/mapa-fogo-cruzado-wp-plugin
  * Description:       This is a short description of what the plugin does. It's displayed in the WordPress admin area.
- * Version:           1.0.0
+ * Version:           1.0.1
  * Author:            Rafael Dourado
  * Author URI:        http://rafaeldourado.com.br
  * License:           GPL-2.0+
@@ -32,10 +32,8 @@ if ( ! defined( 'WPINC' ) ) {
 
 /**
  * Currently plugin version.
- * Start at version 1.0.0 and use SemVer - https://semver.org
- * Rename this for your plugin and update it as you release new versions.
  */
-define( 'MAPA_FOGO_CRUZADO_VERSION', '1.0.0' );
+define( 'MAPA_FOGO_CRUZADO_VERSION', '1.0.1' );
 
 /**
  * The code that runs during plugin activation.

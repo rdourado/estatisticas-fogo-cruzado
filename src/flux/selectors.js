@@ -1,36 +1,99 @@
-/**
- * External dependencies
- */
 import { createSelector } from 'reselect'
-import moment from 'moment'
+import filter from 'lodash/filter'
+import get from 'lodash/get'
 import groupBy from 'lodash/groupBy'
+import kebabCase from 'lodash/kebabCase'
+import keys from 'lodash/keys'
 import map from 'lodash/map'
+import mapValues from 'lodash/mapValues'
+import moment from 'moment'
+import omit from 'lodash/omit'
 import orderBy from 'lodash/orderBy'
+import parseInt from 'lodash/parseInt'
+import reverse from 'lodash/reverse'
 import sumBy from 'lodash/sumBy'
 import take from 'lodash/take'
 import uniq from 'lodash/uniq'
-import 'moment/locale/pt-br'
+import uniqBy from 'lodash/uniqBy'
+import { UF, YEAR, MONTH, CITY, NBRHD, REGION, UPP } from '../shared/types'
 
+import 'moment/locale/pt-br'
 moment.locale('pt-br')
 
+// API selectors
+
+const payloadLocations = payload => payload.locations
+
+export const selectLocations = createSelector(
+	payloadLocations,
+	locations =>
+		mapValues(groupBy(locations, REGION), location =>
+			mapValues(groupBy(location, CITY), location => filter(map(location, NBRHD)))
+		)
+)
+
+export const selectData = data =>
+	data.map(row => ({
+		date: moment(row.date).unix(),
+		lat: parseFloat(row.lat),
+		lng: parseFloat(row.lng),
+		police: parseInt(row.police) === 1,
+		police_dead: parseInt(row.police_dead),
+		police_hurt: parseInt(row.police_hurt),
+		civil_dead: parseInt(row.civil_dead),
+		civil_hurt: parseInt(row.civil_hurt),
+		total_dead: parseInt(row.civil_dead) + parseInt(row.police_dead),
+		total_hurt: parseInt(row.civil_hurt) + parseInt(row.police_hurt),
+		massacre: parseInt(row.massacre) === 1,
+		uf: row.uf.toLowerCase(),
+		region: row.region,
+		city: row.city,
+		nbrhd: { name: row.nbrhd, id: kebabCase(`${row.city}-${row.nbrhd}`) },
+		upp: row.upp,
+	}))
+
+export const selectYears = years =>
+	years.map(row => ({
+		year: parseInt(row.year),
+		firstDate: moment(row.first)
+			.startOf('day')
+			.unix(),
+		lastDate: moment(row.last)
+			.endOf('day')
+			.unix(),
+	}))
+
+export const selectDateRange = (state, response) => {
+	if ([UF, YEAR].includes(state.changingParam)) {
+		const timeline = map(response, 'date')
+		const lastDate = moment(timeline[0])
+		const firstDate = reverse(timeline).find(date => lastDate.isSame(date, 'year'))
+		return [moment(firstDate).unix(), lastDate.unix()]
+	}
+	return state.currentDateRange
+}
+
+// Redux selectors
+
 const pickUF = state => state.currentUF
-// const pickYear = state => state.currentYear
+const pickYear = state => state.currentYear
+const pickYears = state => state.allYears
 const pickDateRange = state => state.currentDateRange
 const pickType = state => state.currentType
-const pickRegion = state => state.currentRegion
+const pickRegions = state => state.currentRegions || []
 const pickCities = state => state.currentCities || []
 const pickNBRHDs = state => state.currentNBRHDs || []
 const pickData = state => state.allData || []
-const pickParams = state => state.allParams || []
+const pickLocations = state => state.allLocations || []
 
 export const selectFilters = createSelector(
-	[pickDateRange, pickType, pickUF, pickRegion, pickCities, pickNBRHDs],
-	([start, end], type, uf, region, cities, nbrhds) => ({
-		start,
-		end,
-		type,
+	[pickUF, pickYear, pickDateRange, pickType, pickRegions, pickCities, pickNBRHDs],
+	(uf, year, dates, type, regions, cities, nbrhds) => ({
 		uf,
-		region,
+		year,
+		dates,
+		type,
+		regions,
 		cities,
 		nbrhds,
 	})
@@ -38,175 +101,231 @@ export const selectFilters = createSelector(
 
 export const selectValidData = createSelector(
 	[pickData, pickDateRange],
-	(data, [start, end]) =>
-		data.filter(x => moment(x.date).isBetween(moment.unix(start), moment.unix(end), null, '[]'))
+	(data, dateRange) => {
+		const firstDate = moment.unix(dateRange[0])
+		const lastDate = moment.unix(dateRange[1])
+		const isDateValid = date => moment.unix(date).isBetween(firstDate, lastDate, null, '[]')
+		return data.filter(row => isDateValid(row.date))
+	}
+)
+
+export const selectValidDataByRegions = createSelector(
+	[selectValidData, pickRegions],
+	(data, regions) =>
+		regions.length === 0 ? data : data.filter(row => regions.includes(row.region))
+)
+
+export const selectValidDataByCities = createSelector(
+	[selectValidDataByRegions, pickCities],
+	(data, cities) => (cities.length === 0 ? data : data.filter(row => cities.includes(row.city)))
+)
+
+export const selectValidDataByNBRHDs = createSelector(
+	[selectValidDataByCities, pickNBRHDs],
+	(data, nbrhds) => (nbrhds.length === 0 ? data : data.filter(row => nbrhds.includes(row.nbrhd)))
+)
+
+export const selectCurrentYear = createSelector(
+	[pickYears, pickYear],
+	(years, currentYear) => years.find(({ year }) => year === currentYear)
 )
 
 export const selectRegions = createSelector(
-	pickParams,
-	params => uniq(map(params, 'region')).sort()
-)
-
-export const selectCities = createSelector(
-	[pickParams, pickRegion],
-	(params, region) => (!region ? [] : uniq(map(groupBy(params, 'region')[region], 'city'))).sort()
-)
-
-export const selectNBRHDs = createSelector(
-	[pickParams, pickRegion, pickCities],
-	(params, region, cities) =>
-		!region || !cities
-			? []
-			: uniq(
-					map(
-						groupBy(params, 'region')[region].filter(x => cities.indexOf(x.city) >= 0),
-						'nbrhd'
-					)
-			  ).sort()
+	pickLocations,
+	locations => uniq(keys(locations)).sort()
 )
 
 export const selectMarkers = createSelector(
-	selectValidData,
-	data => data.map(x => ({ lat: +x.latitude, lng: +x.longitude }))
+	selectValidDataByNBRHDs,
+	data => data.map(row => ({ lat: row.lat, lng: row.lng }))
 )
 
 export const selectStats = createSelector(
-	selectValidData,
+	selectValidDataByNBRHDs,
 	data => ({
-		total: data.length,
-		dead: sumBy(data, x => +x.total_dead),
-		injured: sumBy(data, x => +x.total_injured),
-		policeTotal: sumBy(data, x => +x.had_police),
-		policeDead: sumBy(data, x => +x.police_dead),
-		policeInjured: sumBy(data, x => +x.police_injured),
+		shootings: data.length,
+		policeTotal: sumBy(data, row => (row.police ? 1 : 0)),
+		policeDead: sumBy(data, row => row.police_dead),
+		policeHurt: sumBy(data, row => row.police_hurt),
+		peopleDead: sumBy(data, row => row.civil_dead + row.police_dead),
+		peopleHurt: sumBy(data, row => row.civil_hurt + row.police_hurt),
 	})
 )
 
-const pickDataBy = (key, iteratee = x => x) => state =>
-	take(
-		orderBy(
-			map(
-				groupBy(pickData(state), x =>
-					key !== 'month' ? x[key] : moment(x.date).format('MMMM')
-				),
-				(arr, _key) => ({ [key]: _key, value: iteratee(arr) })
-			),
-			key !== 'month' ? 'value' : null,
-			'desc'
-		),
-		key !== 'month' ? 10 : 12
-	)
+export const selectCities = createSelector(
+	[pickLocations, pickRegions],
+	(locations, regions) => {
+		const cities = regions.flatMap(region => keys(locations[region]))
+		return uniqBy(cities, 'id').sort()
+	}
+)
+
+export const selectNBRHDs = createSelector(
+	[pickLocations, pickRegions, pickCities],
+	(locations, regions, cities) =>
+		regions.flatMap(region => cities.flatMap(city => locations[region][city]))
+)
+
+// Graphics selectors
+
+const pickDataBy = (key, iteratee = x => x) => state => {
+	const groupByKey = row =>
+		key !== MONTH ? row[key].id || row[key] : moment.unix(row.date).format('MMMM')
+	const createValue = (values, keyValue) => ({
+		[key]: get(values, `[0].${key}.name`, keyValue),
+		value: iteratee(values),
+	})
+
+	const data = selectValidDataByNBRHDs(state)
+	const groupedData = omit(groupBy(data, groupByKey), [''])
+	const finalData = map(groupedData, createValue)
+	const orderedData = orderBy(finalData, key !== MONTH ? 'value' : null, 'desc')
+
+	return take(orderedData, key !== MONTH ? 10 : 12)
+}
 
 const sumByKey = key => arr => sumBy(map(arr, key), x => +x)
 
-export const selectShootingsByCities = createSelector(
-	pickDataBy('city', x => x.length),
-	data => ({
-		labels: map(data, 'city'),
-		data: map(data, 'value'),
-	})
-)
-
-export const selectDeathsByCities = createSelector(
-	pickDataBy('city', sumByKey('total_dead')),
-	data => ({
-		labels: map(data, 'city'),
-		data: map(data, 'value'),
-	})
-)
-
-export const selectInjuresByCities = createSelector(
-	pickDataBy('city', sumByKey('total_injured')),
-	data => ({
-		labels: map(data, 'city'),
-		data: map(data, 'value'),
-	})
-)
-
-export const selectShootingsByNBRHDs = createSelector(
-	pickDataBy('nbrhd', x => x.length),
-	data => ({
-		labels: map(data, 'nbrhd'),
-		data: map(data, 'value'),
-	})
-)
-
-export const selectDeathsByNBRHDs = createSelector(
-	pickDataBy('nbrhd', sumByKey('total_dead')),
-	data => ({
-		labels: map(data, 'nbrhd'),
-		data: map(data, 'value'),
-	})
-)
-
-export const selectInjuresByNBRHDs = createSelector(
-	pickDataBy('nbrhd', sumByKey('total_injured')),
-	data => ({
-		labels: map(data, 'nbrhd'),
-		data: map(data, 'value'),
-	})
-)
-
 export const selectShootingsByMonth = createSelector(
-	pickDataBy('month', x => x.length),
+	pickDataBy(MONTH, months => months.length),
 	data => ({
-		labels: map(data, 'month'),
+		labels: map(data, MONTH),
 		data: map(data, 'value'),
 	})
 )
 
 export const selectDeathsByMonth = createSelector(
-	pickDataBy('month', sumByKey('total_dead')),
+	pickDataBy(MONTH, sumByKey('total_dead')),
 	data => ({
-		labels: map(data, 'month'),
+		labels: map(data, MONTH),
 		data: map(data, 'value'),
 	})
 )
 
-export const selectInjuresByMonth = createSelector(
-	pickDataBy('month', sumByKey('total_injured')),
+export const selectHurtsByMonth = createSelector(
+	pickDataBy(MONTH, sumByKey('total_hurt')),
 	data => ({
-		labels: map(data, 'month'),
+		labels: map(data, MONTH),
 		data: map(data, 'value'),
 	})
 )
 
 export const selectShootingsByRegions = createSelector(
-	pickDataBy('region', x => x.length),
+	pickDataBy(REGION, regions => regions.length),
 	data => ({
-		labels: map(data, 'region'),
+		labels: map(data, REGION),
 		data: map(data, 'value'),
 	})
 )
 
 export const selectDeathsByRegions = createSelector(
-	pickDataBy('region', sumByKey('total_dead')),
+	pickDataBy(REGION, sumByKey('total_dead')),
 	data => ({
-		labels: map(data, 'region'),
+		labels: map(data, REGION),
 		data: map(data, 'value'),
 	})
 )
 
-export const selectInjuresByRegions = createSelector(
-	pickDataBy('region', sumByKey('total_injured')),
+export const selectHurtsByRegions = createSelector(
+	pickDataBy(REGION, sumByKey('total_hurt')),
 	data => ({
-		labels: map(data, 'region'),
+		labels: map(data, REGION),
+		data: map(data, 'value'),
+	})
+)
+
+export const selectShootingsByCities = createSelector(
+	pickDataBy(CITY, cities => cities.length),
+	data => ({
+		labels: map(data, CITY),
+		data: map(data, 'value'),
+	})
+)
+
+export const selectDeathsByCities = createSelector(
+	pickDataBy(CITY, sumByKey('total_dead')),
+	data => ({
+		labels: map(data, CITY),
+		data: map(data, 'value'),
+	})
+)
+
+export const selectHurtsByCities = createSelector(
+	pickDataBy(CITY, sumByKey('total_hurt')),
+	data => ({
+		labels: map(data, CITY),
+		data: map(data, 'value'),
+	})
+)
+
+export const selectShootingsByNBRHDs = createSelector(
+	pickDataBy(NBRHD, nbrhds => nbrhds.length),
+	data => ({
+		labels: map(data, NBRHD),
+		data: map(data, 'value'),
+	})
+)
+
+export const selectDeathsByNBRHDs = createSelector(
+	pickDataBy(NBRHD, sumByKey('total_dead')),
+	data => ({
+		labels: map(data, NBRHD),
+		data: map(data, 'value'),
+	})
+)
+
+export const selectHurtsByNBRHDs = createSelector(
+	pickDataBy(NBRHD, sumByKey('total_hurt')),
+	data => ({
+		labels: map(data, NBRHD),
+		data: map(data, 'value'),
+	})
+)
+
+export const selectShootingsByUPPs = createSelector(
+	pickDataBy(UPP, upps => upps.length),
+	data => ({
+		labels: map(data, UPP),
+		data: map(data, 'value'),
+	})
+)
+
+export const selectDeathsByUPPs = createSelector(
+	pickDataBy(UPP, sumByKey('total_dead')),
+	data => ({
+		labels: map(data, UPP),
+		data: map(data, 'value'),
+	})
+)
+
+export const selectHurtsByUPPs = createSelector(
+	pickDataBy(UPP, sumByKey('total_hurt')),
+	data => ({
+		labels: map(data, UPP),
 		data: map(data, 'value'),
 	})
 )
 
 export const selectAgentDeathsByMonth = createSelector(
-	pickDataBy('month', sumByKey('police_dead')),
+	pickDataBy(MONTH, sumByKey('police_dead')),
 	data => ({
-		labels: map(data, 'month'),
+		labels: map(data, MONTH),
 		data: map(data, 'value'),
 	})
 )
 
-export const selectAgentInjuresByMonth = createSelector(
-	pickDataBy('month', sumByKey('police_injured')),
+export const selectAgentHurtsByMonth = createSelector(
+	pickDataBy(MONTH, sumByKey('police_hurt')),
 	data => ({
-		labels: map(data, 'month'),
+		labels: map(data, MONTH),
+		data: map(data, 'value'),
+	})
+)
+
+export const selectMassacresByCities = createSelector(
+	pickDataBy(CITY, sumByKey('massacre')),
+	data => ({
+		labels: map(data, CITY),
 		data: map(data, 'value'),
 	})
 )

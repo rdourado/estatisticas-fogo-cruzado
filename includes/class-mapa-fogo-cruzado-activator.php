@@ -31,7 +31,7 @@ class Mapa_Fogo_Cruzado_Activator {
 	 */
 	public static function activate() {
 
-		self::create_database_table();
+		self::create_db_table();
 		self::create_uploads_dir();
 
 	}
@@ -39,10 +39,10 @@ class Mapa_Fogo_Cruzado_Activator {
 	/**
 	 *
 	 */
-	private function create_database_table() {
+	private static function create_db_table() {
 
 		global $wpdb;
-		$mapa_fogo_cruzado_db_version = '1.0';
+		$mapa_fogo_cruzado_db_version = '1.1';
 		$table_name                   = $wpdb->prefix . 'mapa_fogo_cruzado';
 		$charset_collate              = $wpdb->get_charset_collate();
 
@@ -50,20 +50,19 @@ class Mapa_Fogo_Cruzado_Activator {
 			`ID` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
 			`external_id` bigint(20) unsigned DEFAULT NULL,
 			`date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-			`latitude` double NOT NULL,
-			`longitude` double NOT NULL,
-			`had_police` tinyint(1) DEFAULT '0',
+			`lat` double NOT NULL,
+			`lng` double NOT NULL,
+			`police` tinyint(1) DEFAULT '0',
 			`police_dead` int(11) DEFAULT '0',
-			`police_injured` int(11) DEFAULT '0',
-			`total_dead` int(11) DEFAULT '0',
-			`total_injured` int(11) DEFAULT '0',
-			`was_slaughter` tinyint(1) DEFAULT '0',
-			`city` varchar(255) NOT NULL,
+			`police_hurt` int(11) DEFAULT '0',
+			`civil_dead` int(11) DEFAULT '0',
+			`civil_hurt` int(11) DEFAULT '0',
+			`massacre` tinyint(1) DEFAULT '0',
 			`uf` varchar(2) NOT NULL DEFAULT 'rj',
-			`street` varchar(255) DEFAULT NULL,
+			`region` varchar(255) DEFAULT NULL,
+			`city` varchar(255) NOT NULL,
 			`nbrhd` varchar(255) DEFAULT NULL,
 			`upp` varchar(255) DEFAULT NULL,
-			`region` varchar(255) DEFAULT NULL,
 			PRIMARY KEY (`ID`),
 			UNIQUE KEY `external_id` (`external_id`)
 		  ) $charset_collate;";
@@ -78,7 +77,7 @@ class Mapa_Fogo_Cruzado_Activator {
 	/**
 	 *
 	 */
-	private function create_uploads_dir() {
+	private static function create_uploads_dir() {
 
 		$upload_dir = wp_get_upload_dir();
 		$basedir    = $upload_dir['basedir'];

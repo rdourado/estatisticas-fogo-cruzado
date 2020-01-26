@@ -1,21 +1,17 @@
-/**
- * External dependencies
- */
-import { call, fork, put, take, takeLatest, actionChannel } from 'redux-saga/effects'
+/* global mapa_fogo_cruzado */
+import { all, call, fork, put, take, takeLatest, actionChannel } from 'redux-saga/effects'
 import { showLoading, hideLoading } from 'react-redux-loading-bar'
-/**
- * Internal dependencies
- */
+import get from 'lodash/get'
 import { selectFilters } from './selectors'
 import * as actions from './actions'
 import * as Api from './api'
 import store from './store'
 
-function* paramsSaga({ payload }) {
+function* paramsSaga({ payload: uf }) {
 	try {
 		yield put(showLoading())
-		const response = yield call(Api.fetchParams, payload)
-		yield put(actions.successParams(response))
+		const response = yield call(Api.fetchParams, uf)
+		yield put(actions.successParams(response.data))
 		yield fork(filtersSaga)
 	} catch (e) {
 		yield put(actions.failureParams(e.message))
@@ -27,8 +23,11 @@ function* paramsSaga({ payload }) {
 function* dataSaga({ payload }) {
 	try {
 		yield put(showLoading())
-		const response = yield call(Api.fetchData, payload)
-		yield put(actions.successData(response))
+		const { firstChunk, secondChunk } = yield all({
+			firstChunk: call(Api.fetchData, payload, 0),
+			secondChunk: call(Api.fetchData, payload, 1),
+		})
+		yield put(actions.successData([...firstChunk.data, ...secondChunk.data]))
 	} catch (e) {
 		yield put(actions.failureData(e.message))
 	} finally {
@@ -50,19 +49,19 @@ function* graphicsSaga() {
 	}
 }
 
-function* imageSaga({ id, hash }) {
+function* imageSaga(args) {
 	try {
-		const file = yield call(Api.findImage, { hash })
-		if (file.data) {
-			yield put(actions.successImage({ [hash]: file.data }))
+		const response = yield call(Api.findImage, args)
+		if (response.data) {
+			yield put(actions.successImage({ [args.id]: response.data }))
 		} else {
-			const canvas = yield call(Api.createImage, document.getElementById(id))
+			const canvas = yield call(Api.createImage, document.getElementById(args.id))
 			const response = yield call(Api.saveImage, {
 				base64: canvas.toDataURL('image/png').split(',')[1],
-				hash,
+				...args,
 			})
 			yield response.success
-				? put(actions.successImage({ [hash]: response.data }))
+				? put(actions.successImage({ [args.id]: response.data }))
 				: put(actions.failureImage('Erro ao gerar imagem'))
 		}
 	} catch (e) {
@@ -72,19 +71,14 @@ function* imageSaga({ id, hash }) {
 
 function* rootSaga() {
 	yield fork(graphicsSaga)
-
 	yield takeLatest(actions.requestParams, paramsSaga)
 	yield takeLatest(actions.requestData, dataSaga)
 	yield takeLatest(actions.updateUF, paramsSaga)
-
 	yield takeLatest(actions.updateYear, filtersSaga)
-	yield takeLatest(actions.updateType, filtersSaga)
-	yield takeLatest(actions.updateRegion, filtersSaga)
-	yield takeLatest(actions.updateCity, filtersSaga)
-	yield takeLatest(actions.updateNBRHD, filtersSaga)
 	yield takeLatest(actions.updateDate, filtersSaga)
 
-	yield put(actions.requestParams('rj'))
+	const uf = get(mapa_fogo_cruzado, 'uf', 'rj')
+	yield put(actions.requestParams(uf))
 }
 
 export default rootSaga

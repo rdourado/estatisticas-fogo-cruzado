@@ -32,8 +32,8 @@ class Mapa_Fogo_Cruzado_List_Table extends WP_List_Table {
 	public function column_default( $item, $column_name ) {
 
 		switch ( $column_name ) {
-			case 'had_police':
-				return intval( $item[ $column_name ] )
+			case 'police':
+				return 1 === intval( $item[ $column_name ] )
 					? __( 'Sim', 'mapa-fogo-cruzado' )
 					: __( 'Não', 'mapa-fogo-cruzado' );
 			case 'date':
@@ -100,16 +100,18 @@ class Mapa_Fogo_Cruzado_List_Table extends WP_List_Table {
 	function get_columns() {
 
 		return array(
-			'cb'            => '<input type="checkbox" />',
-			'external_id'   => __( 'ID', 'mapa-fogo-cruzado' ),
-			'date'          => __( 'Data', 'mapa-fogo-cruzado' ),
-			'uf'            => __( 'UF', 'mapa-fogo-cruzado' ),
-			'city'          => __( 'Cidade', 'mapa-fogo-cruzado' ),
-			'region'        => __( 'Região', 'mapa-fogo-cruzado' ),
-			'nbrhd'         => __( 'Bairro', 'mapa-fogo-cruzado' ),
-			'had_police'    => __( 'Polícia', 'mapa-fogo-cruzado' ),
-			'total_dead'    => __( 'Mortos', 'mapa-fogo-cruzado' ),
-			'total_injured' => __( 'Feridos', 'mapa-fogo-cruzado' ),
+			'cb'          => '<input type="checkbox" />',
+			'uf'          => __( 'UF', 'mapa-fogo-cruzado' ),
+			'external_id' => __( 'ID', 'mapa-fogo-cruzado' ),
+			'date'        => __( 'Data', 'mapa-fogo-cruzado' ),
+			'region'      => __( 'Região', 'mapa-fogo-cruzado' ),
+			'city'        => __( 'Cidade', 'mapa-fogo-cruzado' ),
+			'nbrhd'       => __( 'Bairro', 'mapa-fogo-cruzado' ),
+			'police'      => __( 'Polícia', 'mapa-fogo-cruzado' ),
+			'police_dead' => __( 'P. Mortos', 'mapa-fogo-cruzado' ),
+			'police_hurt' => __( 'P. Feridos', 'mapa-fogo-cruzado' ),
+			'civil_dead'  => __( 'C. Mortos', 'mapa-fogo-cruzado' ),
+			'civil_hurt'  => __( 'C. Feridos', 'mapa-fogo-cruzado' ),
 		);
 
 	}
@@ -122,14 +124,17 @@ class Mapa_Fogo_Cruzado_List_Table extends WP_List_Table {
 	public function get_sortable_columns() {
 
 		return array(
-			'external_id'   => array( 'external_id', false ),
-			'date'          => array( 'date', false ),
-			'total_dead'    => array( 'total_dead', false ),
-			'total_injured' => array( 'total_injured', false ),
-			'city'          => array( 'city', false ),
-			'uf'            => array( 'uf', false ),
-			'region'        => array( 'region', false ),
-			'nbrhd'         => array( 'nbrhd', false ),
+			'external_id' => array( 'external_id', false ),
+			'uf'          => array( 'uf', false ),
+			'date'        => array( 'date', false ),
+			'region'      => array( 'region', false ),
+			'city'        => array( 'city', false ),
+			'nbrhd'       => array( 'nbrhd', false ),
+			'police'      => array( 'police', false ),
+			'police_dead' => array( 'police_dead', false ),
+			'police_hurt' => array( 'police_hurt', false ),
+			'civil_dead'  => array( 'civil_dead', false ),
+			'civil_hurt'  => array( 'civil_hurt', false ),
 		);
 
 	}

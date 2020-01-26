@@ -1,31 +1,31 @@
-/**
- * External dependencies
- */
 import React from 'react'
 import { bool } from 'prop-types'
+import { compose } from 'recompose'
 import { connect } from 'react-redux'
-/**
- * Internal dependencies
- */
-import FiltersContainer from './filters'
-import GraphicsContainer from './graphics'
-import Loading from './dialogs/Loading'
+import { hot } from 'react-hot-loader/root'
 import FatalError from './dialogs/FatalError'
-import MapContainer from './map'
-import css from './App.module.css'
+import Filters from './filters'
+import Graphics from './graphics'
+import Loading from './dialogs/Loading'
+import Map from './map'
 
-const App = ({ isLoading, isBroken }) =>
-	isLoading ? (
-		<Loading />
-	) : isBroken ? (
-		<FatalError />
-	) : (
-		<div className={css.app}>
-			<FiltersContainer />
-			<MapContainer />
-			<GraphicsContainer />
-		</div>
+const App = props => {
+	if (props.isLoading) {
+		return <Loading />
+	}
+
+	if (props.isBroken) {
+		return <FatalError />
+	}
+
+	return (
+		<>
+			<Filters />
+			<Map />
+			<Graphics />
+		</>
 	)
+}
 
 App.propTypes = {
 	isBroken: bool,
@@ -37,4 +37,7 @@ const mapStateToProps = ({ state }) => ({
 	isLoading: state.isReady === null,
 })
 
-export default connect(mapStateToProps)(App)
+export default compose(
+	hot,
+	connect(mapStateToProps)
+)(App)

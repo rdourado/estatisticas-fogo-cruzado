@@ -192,6 +192,7 @@ class Mapa_Fogo_Cruzado {
 		$this->loader->add_action( 'wp_ajax_nopriv_create_graphic_image', $plugin_public, 'create_graphic_image' );
 		$this->loader->add_action( 'wp_ajax_find_graphic_image', $plugin_public, 'find_graphic_image' );
 		$this->loader->add_action( 'wp_ajax_nopriv_find_graphic_image', $plugin_public, 'find_graphic_image' );
+		$this->loader->add_action( 'wp_head', $plugin_public, 'set_open_graph_tags', 99 );
 
 	}
 
