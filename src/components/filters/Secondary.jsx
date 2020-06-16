@@ -131,7 +131,7 @@ const Main = styled(MainYears)`
 	@media (min-width: ${breakpoint}) {
 		margin: 0;
 		position: relative;
-		width: auto
+		width: auto;
 		z-index: 5;
 
 		:before,
