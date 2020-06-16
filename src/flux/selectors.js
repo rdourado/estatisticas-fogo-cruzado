@@ -122,7 +122,10 @@ export const selectValidDataByCities = createSelector(
 
 export const selectValidDataByNBRHDs = createSelector(
 	[selectValidDataByCities, pickNBRHDs],
-	(data, nbrhds) => (nbrhds.length === 0 ? data : data.filter(row => nbrhds.includes(row.nbrhd)))
+	(data, nbrhds) =>
+		nbrhds.length === 0
+			? data
+			: data.filter(row => nbrhds.includes(row.nbrhd.name || row.nbrhd))
 )
 
 export const selectCurrentYear = createSelector(
@@ -156,7 +159,7 @@ export const selectCities = createSelector(
 	[pickLocations, pickRegions],
 	(locations, regions) => {
 		const cities = regions.flatMap(region => keys(locations[region]))
-		return uniqBy(cities, 'id').sort()
+		return uniq(cities).sort()
 	}
 )
 
