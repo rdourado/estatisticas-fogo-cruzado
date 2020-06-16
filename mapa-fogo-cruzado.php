@@ -14,7 +14,7 @@
  *
  * @wordpress-plugin
  * Plugin Name:       Mapa Fogo Cruzado
- * Plugin URI:        https://github.com/rdourado/mapa-fogo-cruzado-wp-plugin
+ * Plugin URI:        https://github.com/rdourado/estatisticas-fogo-cruzado
  * Description:       This is a short description of what the plugin does. It's displayed in the WordPress admin area.
  * Version:           1.0.1
  * Author:            Rafael Dourado
