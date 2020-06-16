@@ -1,3 +1,4 @@
+var path = require('path')
 var browserSync = require('browser-sync')
 var webpack = require('webpack')
 var webpackDevMiddleware = require('webpack-dev-middleware')
@@ -5,13 +6,14 @@ var webpackHotMiddleware = require('webpack-hot-middleware')
 
 var webpackConfig = require('./webpack.config')('development')
 var bundler = webpack(webpackConfig)
+var pluginFolder = path.basename(__dirname)
 
 browserSync({
 	proxy: 'localhost:8080',
 	browser: 'google chrome',
 	rewriteRules: [
 		{
-			match: /(src)=('|").*?mapa-fogo-cruzado\/public\/(.*?)('|")/gi,
+			match: new RegExp('(src)=(\'|").*?' + pluginFolder + '/public/(.*?)(\'|")', 'gi'),
 			replace: '$1=$2/$3$4',
 		},
 	],
@@ -22,5 +24,4 @@ browserSync({
 		}),
 		webpackHotMiddleware(bundler),
 	],
-	// files: ['app/css/*.css', 'app/*.html'],
 })
