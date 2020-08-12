@@ -144,7 +144,7 @@
 		"redux": "^4.0.4",
 		"redux-saga": "^1.0.5",
 		"redux-starter-kit": "^0.6.2",
-		"serialize-javascript": "^2.1.2",
+		"serialize-javascript": "^3.1.0",
 		"shortid": "^2.2.14",
 		"styled-components": "^4.3.2",
 		"webpack": "^4.38.0",
